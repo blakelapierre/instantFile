@@ -1,0 +1,27 @@
+{
+  "name": "instantFile",
+  "version": "0.0.0",
+  "description": "The easiest to use, encrypted, P2P file transfer software the world has seen to-date.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/blakelapierre/instantFile.git"
+  },
+  "keywords": [
+    "encrypted",
+    "p2p",
+    "file",
+    "transfer",
+    "easy",
+    "simple",
+    "webrtc"
+  ],
+  "author": "Blake La Pierre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blakelapierre/instantFile/issues"
+  }
+}
