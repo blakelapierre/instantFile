@@ -1,5 +1,5 @@
 To Ship:
 
-# A button
-# A drop target
-# A paragraph/sentence
+1. A button
+2. A drop target
+3. A paragraph/sentence
