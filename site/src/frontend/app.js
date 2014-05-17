@@ -4,6 +4,7 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   
   .directive('commandCenter', require('./directives/commandCenter/directive'))
   .directive('instantFile',   require('./directives/instantFile/directive'))
+  .directive('mediaCenter',   require('./directives/mediaCenter/directive'))
 
   .directive('fileDropArea',  require('./directives/util/fileDropArea/directive'))
 
