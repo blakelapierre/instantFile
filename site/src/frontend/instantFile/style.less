@@ -1,3 +1,11 @@
+@keyframes greenTextPulse {
+  from { color: #749a02; text-shadow: 0 0 1em #333; }
+  15% { color: #91ff09; text-shadow: 0 0 1.1em #91bd09; }
+  50% { color: #91ff09; text-shadow: 0 0 2em #91bd09; }
+  85% { color: #91ff09; text-shadow: 0 0 1.1em #91bd09; }
+  to { color: #749a02; text-shadow: 0 0 1em #333; }
+}
+
 instant-file {
   position: fixed;
   width: 100%;
@@ -7,7 +15,7 @@ instant-file {
 
   .teaser {
     position: relative;
-    top: 50%;
+    top: 40%;
 
     width: 50%;
     margin: 0 auto;
@@ -18,5 +26,8 @@ instant-file {
 
     color: #3f3;
     text-shadow: 0 0 6px #6f6;
+
+    // leave this off for now to save CPU cycles
+    // animation: greenTextPulse 10s infinite linear;
   }
 }
