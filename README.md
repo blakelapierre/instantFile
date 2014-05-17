@@ -18,7 +18,7 @@ A job may be staffed by one or more persons. All jobs offer equal equity stake i
 
 * Chief Interface Officer - We need to show users *what the software does/is doing*. You, the CIfO, make this happen.
 
-* Chief Integration Officer - We need to be able to send our/your link out over every known text-based platform (think email, text message, Twitter, Facebook, Google+, etc., etc.). You, the CIO, make this happen.
+* Chief Integration Officer - We need to be able to send links out over every known text-based platform (think email, text message, Twitter, Facebook, Google+, etc., etc.). You, the CIO, make this happen.
 
 * Chief RTC Officer - We need to actually transfer files. Basically you just need to selectively take code from the facerace repo, or roll your own. You, the CRTCO, make this happen.
 

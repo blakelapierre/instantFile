@@ -2,12 +2,12 @@ var angular = require('angular');
 
 module.exports = angular.module('instantFile', ['ngRoute'])
   
-  .directive('commandCenter', require('./commandCenter/directive'))
-  .directive('instantFile',   require('./instantFile/directive'))
+  .directive('commandCenter', require('./directives/commandCenter/directive'))
+  .directive('instantFile',   require('./directives/instantFile/directive'))
 
-  .directive('fileDropArea',  require('./util/fileDropArea/directive'))
+  .directive('fileDropArea',  require('./directives/util/fileDropArea/directive'))
 
-  .factory('host',  require('./host/factory'))
+  .factory('host',  require('./factories/host/factory'))
 
   .config(function($routeProvider, $compileProvider) {
     $routeProvider
