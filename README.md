@@ -22,3 +22,5 @@ A job may be staffed by one or more persons. All jobs offer equal equity stake i
 
 * Chief Chief Officer - We need to do everything else necessary to ship. You, the CCO, will make this happen.
 
+
+Live dev/test server: http://facerace.in:2777
