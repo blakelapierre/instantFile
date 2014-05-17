@@ -18,7 +18,7 @@ A job may be staffed by one or more persons. All jobs offer equal equity stake i
 
 * Chief Integration Officer - We need to be able to send our/your link out over every known text-based platform (think email, text message, Twitter, Facebook, Google+, etc., etc.). You, the CIO, will make this happen.
 
-* Chief RTC Officer - We need to actually transfer files. You, the CRTCO, will make this happen. Basically you just need to selectively take code from the facerace repo.
+* Chief RTC Officer - We need to actually transfer files. Basically you just need to selectively take code from the facerace repo, or roll your own. You, the CRTCO, will make this happen.
 
 * Chief Chief Officer - We need to do everything else necessary to ship. You, the CCO, will make this happen.
 
