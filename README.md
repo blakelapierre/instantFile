@@ -1,7 +1,9 @@
 To Run:
+```
     cd site
     npm install
     grunt debug
+```
 
 To Ship:
 
