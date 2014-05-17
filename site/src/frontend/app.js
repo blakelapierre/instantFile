@@ -2,14 +2,16 @@ var angular = require('angular');
 
 module.exports = angular.module('instantFile', ['ngRoute'])
   
-  .directive('commandCenter', require('./directives/commandCenter/directive'))
   .directive('instantFile',   require('./directives/instantFile/directive'))
+  .directive('teaser',        require('./directives/teaser/directive'))
+  .directive('commandCenter', require('./directives/commandCenter/directive'))
   .directive('mediaCenter',   require('./directives/mediaCenter/directive'))
   .directive('statsCenter',   require('./directives/statsCenter/directive'))
 
   .directive('fileDropArea',  require('./directives/util/fileDropArea/directive'))
 
   .factory('host',  require('./factories/host/factory'))
+  .factory('rtc',   require('./factories/rtc/factory'))
 
   .config(function($routeProvider, $compileProvider) {
     $routeProvider
@@ -17,7 +19,7 @@ module.exports = angular.module('instantFile', ['ngRoute'])
         template: '<command-center></command-center>'
       })
       .otherwise({
-        template: '<instant-file></instant-file>'
+        template: '<teaser></teaser>'
       });
 
       $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|file|blob):|data:image\//);

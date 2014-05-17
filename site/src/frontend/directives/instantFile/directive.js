@@ -7,7 +7,7 @@ module.exports = function instantFileDirective() {
     },
     controller: ['$scope', '$location', 'host', function($scope, $location, host) {
       $scope.$watch('droppedFile', function(droppedFile) {
-        host.droppedFile = droppedFile;
+        host.file = droppedFile;
         
         if (droppedFile) {
           $location.path(droppedFile.name);

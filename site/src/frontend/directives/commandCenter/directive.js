@@ -4,18 +4,13 @@ module.exports = function commandCenterDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    controller: ['$scope', '$location', 'host', function($scope, $location, host) {
+    controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
 
-      var room = $location.hash(),
-          url = 'ws://' + $location.host() + ':2776';
+      var room = $location.hash();
 
-      webRTC.connect(url, room);
+      rtc.joinRoom(room)
 
-      console.dir(webRTC);
-
-      var droppedFile = host.droppedFile;
-
-      $scope.file = droppedFile;
+      $scope.file = host.file;
     }]
   };
 };

@@ -1,5 +1,5 @@
 module.exports = function() {
   return {
-    droppedFile: null
+    file: null
   };
 };
