@@ -9,7 +9,8 @@ module.exports = function(config, callback) {
 
   app.use(express.static(path.join(serverRoot, '..', 'dist')));
 
-  var webserver = app.listen(config.port);
+  var webserver = app.listen(config.port),
+      rtcManager = webRTC.listen(config.rtcport);
 
-  callback(webserver, webRTC);
+  callback(webserver, rtcManager);
 };

@@ -22,6 +22,15 @@ module.exports = function(grunt) {
         }
       }
     },
+    copy: {
+      libs: {
+        files: [
+          // For some reason the version of this file that comes from npm doesn't work. I've put
+          // my modified version directly into dist/libs...it works :) You want something better? Do it.
+          //{src: ['node_modules/webrtc.io-client/lib/webrtc.io.js'], dest: './dist/libs/webrtc.io.js'}
+        ]
+      }
+    },
     browserify: {
       instantFile: {
         files: {
@@ -82,10 +91,10 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('serve', 'test', function() {
-    grunt.task.run('preprocess:index', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:dev', 'watch:site');
+    grunt.task.run('copy:libs', 'preprocess:index', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:dev', 'watch:site');
   });
 
   grunt.registerTask('debug', 'test', function() {
-    grunt.task.run('preprocess:livereload', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:dev', 'watch:site');
+    grunt.task.run('copy:libs', 'preprocess:livereload', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:dev', 'watch:site');
   });
 };
