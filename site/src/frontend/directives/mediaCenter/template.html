@@ -1,1 +1,2 @@
-<img class="preview" src="{{imageUrl}}" />
+<img ng-if="type == 'image'" class="preview" src="{{src}}" />
+<video ng-if="type == 'video'" class="preview" src="{{src}}" controls></video>

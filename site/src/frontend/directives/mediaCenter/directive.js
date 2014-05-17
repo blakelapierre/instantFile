@@ -10,7 +10,12 @@ module.exports = ['$sce', function($sce) {
         console.log(file);
         if (file) {
           if (/image.*/.test(file.type)) {
-            $scope.imageUrl = $sce.trustAsResourceUrl(URL.createObjectURL(file));
+            $scope.type = 'image';
+            $scope.src = $sce.trustAsResourceUrl(URL.createObjectURL(file));
+          }
+          else if (/video.*/.test(file.type)) {
+            $scope.type = 'video';
+            $scope.src = $sce.trustAsResourceUrl(URL.createObjectURL(file));
           }
         }
       });
