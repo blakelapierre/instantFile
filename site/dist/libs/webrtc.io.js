@@ -457,6 +457,7 @@ if (navigator.webkitGetUserMedia) {
 
     // track dataChannel
     rtc.dataChannels[id + ':' + channel.label] = channel;
+
     return channel;
   };
 
