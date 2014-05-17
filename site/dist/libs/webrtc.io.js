@@ -192,6 +192,8 @@ if (navigator.webkitGetUserMedia) {
           var stream = rtc.streams[i];
           pc.addStream(stream);
         }
+
+        rtc.fire('new connection', data.socketId);
       });
 
       rtc.on('remove_peer_connected', function(data) {
