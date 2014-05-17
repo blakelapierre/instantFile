@@ -7,7 +7,8 @@
 
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-  
+
+  <script type="text/javascript" src="/libs/angular-route.min.js"></script>  
   
   <script type="text/javascript" src="/instantFile.js"></script>
 
@@ -18,6 +19,6 @@
   <link rel="stylesheet" href="/style.css"></link>
 <head>  
 <body>
-  <instant-file file-drop-area="droppedFile"></instant-file>
+  <ng-view></ng-view>
 </body>
 </html>

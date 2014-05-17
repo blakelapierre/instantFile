@@ -1,4 +1,4 @@
-module.exports = function fileDropArea() {
+module.exports = function fileDropAreaDirective() {
   
   function processDragOverEnter(e) {
     e.preventDefault();
@@ -20,10 +20,10 @@ module.exports = function fileDropArea() {
 
         $scope.file = e.dataTransfer.files[0];
 
-        console.log($scope.file);
+        $scope.$apply();
 
         return false;
       });
     }
-  }
+  };
 };
