@@ -9,14 +9,10 @@ module.exports = ['$sce', function($sce) {
       $scope.$watch('file', function(file) {
         console.log(file);
         if (file) {
-          if (/image.*/.test(file.type)) {
-            $scope.type = 'image';
-            $scope.src = $sce.trustAsResourceUrl(URL.createObjectURL(file));
-          }
-          else if (/video.*/.test(file.type)) {
-            $scope.type = 'video';
-            $scope.src = $sce.trustAsResourceUrl(URL.createObjectURL(file));
-          }
+          var type = file.type.split('/')[0];
+
+          $scope.type = type;
+          $scope.src = $sce.trustAsResourceUrl(URL.createObjectURL(file));
         }
       });
     }
