@@ -2,7 +2,7 @@ To Run:
 ```
     cd site
     npm install
-    grunt debug
+    grunt serve
 ```
 
 To Ship:
@@ -21,6 +21,11 @@ A job may be staffed by one or more persons. All jobs offer equal equity stake i
 * Chief RTC Officer - We need to actually transfer files. Basically you just need to selectively take code from the facerace repo, or roll your own. You, the CRTCO, will make this happen.
 
 * Chief Chief Officer - We need to do everything else necessary to ship. You, the CCO, will make this happen.
+
+
+Apply yourself.
+
+
 
 
 Live dev/test server: http://facerace.in:2777
