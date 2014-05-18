@@ -32,7 +32,13 @@ module.exports = ['$location', function($location) {
 
       var offset = 0,
           backoff = 0,
-          startTime = new Date().getTime();
+          startTime = new Date().getTime()
+          stats = {
+            startTime: startTime,
+            sent: 0,
+            total: result.byteLength,
+            speed: 0
+          };
       var sendChunk = function() {
         if (offset == result.byteLength) return;
 
@@ -44,7 +50,8 @@ module.exports = ['$location', function($location) {
           try {
             channel.send(chunk);
             offset += chunkSize;
-            $rootScope.upSpeed = offset / (now - startTime) / 1000;  
+            stats.sent = offset;
+            stats.speed = offset / (now - startTime) / 1000;  
           } catch(e) {
             setTimeout(sendChunk, backoff);
             backoff += 100;
@@ -54,6 +61,8 @@ module.exports = ['$location', function($location) {
         }
       };
       sendChunk();
+
+      return stats;
     };
 
     reader.readAsArrayBuffer(file);

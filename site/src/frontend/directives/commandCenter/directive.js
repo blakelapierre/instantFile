@@ -6,6 +6,8 @@ module.exports = function commandCenterDirective() {
 
       var room = $location.path();
 
+      $scope.transfers = [];
+
       rtc.joinRoom(room, function(roomManager) {
         console.dir(roomManager);
 
@@ -29,8 +31,9 @@ module.exports = function commandCenterDirective() {
           roomManager.on('data stream data', function(channel, message) {
             console.log('message', message);  
             if (message == room) {
-              rtc.sendFile(channel, host.file);
+              $scope.sendStats = rtc.sendFile(channel, host.file);
             }
+            $scope.$apply();
           });
         }
         else {
@@ -41,20 +44,19 @@ module.exports = function commandCenterDirective() {
           roomManager.on('data stream data', function(channel, message) {
             var incoming = channelManager[channel];
             if (incoming) {
-              var now = new Date().getTime();
+              var now = new Date().getTime(),
+                  stats = incoming.stats;
 
               incoming.buffers.push(message);
 
               incoming.position += message.byteLength;
 
-              $scope.received = incoming.position;
-              $scope.total = incoming.byteLength;
-              $scope.downSpeed = incoming.position / (now - incoming.start) / 1000;
+              stats.received = incoming.position;
+              stats.total = incoming.byteLength;
+              stats.downSpeed = incoming.position / (now - incoming.start) / 1000;
         
               if (incoming.position == incoming.byteLength) {
                 var blob = new Blob(incoming.buffers, {type: incoming.type});
-
-                console.log(incoming, blob);
 
                 $scope.file = blob;
 
@@ -73,17 +75,27 @@ module.exports = function commandCenterDirective() {
                   name = parts[1],
                   type = parts[2];
 
+              var stats = {
+                received: 0,
+                total: byteLength,
+                downSpeed: 0
+              };
+
+              $scope.transfers.push(stats);
+
               console.log('Incoming', type, 'file of byteLength', byteLength, '!');
 
               channelManager[channel] = {
                 byteLength: byteLength,
                 name: name,
                 type: type,
+                stats: stats,
                 position: 0,
                 buffers: [],
                 start: new Date().getTime()
               };
             }
+            $scope.$apply();
           });
         }
       });
