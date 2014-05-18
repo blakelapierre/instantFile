@@ -28,7 +28,7 @@ module.exports = ['$location', function($location) {
     reader.onload = function(e) {
       var result = e.target.result;
 
-      channel.send(result.byteLength + ';' + file.name);
+      channel.send(result.byteLength + ';' + file.name + ';' + file.type);
 
       var offset = 0,
           backoff = 0,

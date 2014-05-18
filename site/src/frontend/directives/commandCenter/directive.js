@@ -52,7 +52,13 @@ module.exports = function commandCenterDirective() {
               $scope.downSpeed = incoming.position / (now - incoming.start) / 1000;
         
               if (incoming.position == incoming.byteLength) {
-                var blob = new Blob(incoming.buffers);
+                var blob = new Blob(incoming.buffers, {type: incoming.type});
+
+                console.log(incoming, blob);
+
+                $scope.file = blob;
+
+                $scope.$apply();
 
                 var a = document.createElement('a');
                 a.href = window.URL.createObjectURL(blob);
@@ -64,13 +70,15 @@ module.exports = function commandCenterDirective() {
             else {
               var parts = message.toString().split(';'),
                   byteLength = parseInt(parts[0]),
-                  name = parts[1];
+                  name = parts[1],
+                  type = parts[2];
 
-              console.log('Incoming file of byteLength', byteLength, '!');
+              console.log('Incoming', type, 'file of byteLength', byteLength, '!');
 
               channelManager[channel] = {
                 byteLength: byteLength,
                 name: name,
+                type: type,
                 position: 0,
                 buffers: [],
                 start: new Date().getTime()
