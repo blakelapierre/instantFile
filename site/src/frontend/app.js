@@ -5,6 +5,7 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   .directive('instantFile',   require('./directives/instantFile/directive'))
   .directive('teaser',        require('./directives/teaser/directive'))
   .directive('commandCenter', require('./directives/commandCenter/directive'))
+  .directive('controlCenter', require('./directives/controlCenter/directive'))
   .directive('mediaCenter',   require('./directives/mediaCenter/directive'))
   .directive('statsCenter',   require('./directives/statsCenter/directive'))
 
