@@ -2,8 +2,7 @@ module.exports = function fileDropAreaDirective() {
   
   function processDragOverEnter(e) {
     e.preventDefault();
-    e.dataTransfer.effectAllowed = 'copy';
-    return false;
+    e.stopPropagation();
   };
 
   return {
@@ -12,6 +11,7 @@ module.exports = function fileDropAreaDirective() {
       'file': '=fileDropArea'
     },
     link: function($scope, element, attributes) {
+      console.log('link')
       element.bind('dragover', processDragOverEnter);
       element.bind('dragenter', processDragOverEnter);
 
