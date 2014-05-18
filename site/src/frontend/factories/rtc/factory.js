@@ -21,51 +21,54 @@ module.exports = ['$location', function($location) {
     }
   };
 
-  function sendFile(channel, file) {
+  function sendFile(channel, file, progress) {
     var chunkSize = 64 * 1024,
-        reader = new FileReader();
+        reader = new FileReader(),
+        stats = {};
 
     reader.onload = function(e) {
-      var result = e.target.result;
+      var buffer = e.target.result;
 
-      channel.send(result.byteLength + ';' + file.name + ';' + file.type);
+      channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
 
       var offset = 0,
           backoff = 0,
-          startTime = new Date().getTime()
-          stats = {
-            startTime: startTime,
-            sent: 0,
-            total: result.byteLength,
-            speed: 0
-          };
-      var sendChunk = function() {
-        if (offset == result.byteLength) return;
+          startTime = new Date().getTime();
 
-        var now = new Date().getTime();
+      stats.startTime = startTime;
+      stats.sent = 0;
+      stats.total = buffer.byteLength;
+      stats.speed = 0;
 
-        for (var i = 0; i < 10; i++) {
-          var size = Math.min(offset + chunkSize, result.byteLength),
-              chunk = result.slice(offset, size);
-          try {
-            channel.send(chunk);
-            offset += chunkSize;
-            stats.sent = offset;
-            stats.speed = offset / (now - startTime) / 1000;  
-          } catch(e) {
-            setTimeout(sendChunk, backoff);
-            backoff += 100;
-          }
+      function sendChunk() {
+        var now = new Date().getTime(),
+            size = Math.min(chunkSize, buffer.byteLength - offset),
+            chunk = buffer.slice(offset, offset + size);
 
-          if (offset < result.byteLength) setTimeout(sendChunk, 0);
+        try {
+          channel.send(chunk);
+          offset += size;
+          stats.sent = offset;
+          stats.speed = offset / (now - startTime) / 1000;  
+
+          backoff = 0;
+
+          if (offset < buffer.byteLength) setTimeout(sendChunk, 0);
+        } catch(e) {
+          console.log(e);
+          if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
+          backoff += 100;
         }
-      };
-      sendChunk();
 
-      return stats;
+        if (progress) progress(stats);
+      };
+
+      sendChunk();
     };
 
     reader.readAsArrayBuffer(file);
+
+    return stats;
   };
 
   return {

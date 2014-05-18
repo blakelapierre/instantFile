@@ -31,9 +31,11 @@ module.exports = function commandCenterDirective() {
           roomManager.on('data stream data', function(channel, message) {
             console.log('message', message);  
             if (message == room) {
-              $scope.sendStats = rtc.sendFile(channel, host.file);
+              $scope.sendStats = rtc.sendFile(channel, host.file, function(stats) {
+                $scope.sendStats = stats;
+                $scope.$apply();
+              });
             }
-            $scope.$apply();
           });
         }
         else {
@@ -59,8 +61,6 @@ module.exports = function commandCenterDirective() {
                 var blob = new Blob(incoming.buffers, {type: incoming.type});
 
                 $scope.file = blob;
-
-                $scope.$apply();
 
                 var a = document.createElement('a');
                 a.href = window.URL.createObjectURL(blob);
