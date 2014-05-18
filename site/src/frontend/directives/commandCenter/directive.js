@@ -7,7 +7,7 @@ module.exports = function commandCenterDirective() {
       var room = $location.path();
 
       $scope.transfers = [];
-
+console.log('joining', room);
       rtc.joinRoom(room, function(roomManager) {
         console.dir(roomManager);
 
@@ -44,6 +44,7 @@ module.exports = function commandCenterDirective() {
           });
 
           roomManager.on('data stream data', function(channel, message) {
+            
             var incoming = channelManager[channel];
             if (incoming) {
               var now = new Date().getTime(),
@@ -51,11 +52,13 @@ module.exports = function commandCenterDirective() {
 
               incoming.buffers.push(message);
 
-              incoming.position += message.byteLength;
+              incoming.position += message.byteLength || message.size; // Firefox uses 'size'
 
               stats.received = incoming.position;
               stats.total = incoming.byteLength;
               stats.downSpeed = incoming.position / (now - incoming.start) / 1000;
+
+              console.log(stats);
         
               if (incoming.position == incoming.byteLength) {
                 var blob = new Blob(incoming.buffers, {type: incoming.type});
@@ -63,10 +66,11 @@ module.exports = function commandCenterDirective() {
                 $scope.file = blob;
 
                 var a = document.createElement('a');
+                document.body.appendChild(a); // Firefox apparently needs this
                 a.href = window.URL.createObjectURL(blob);
-                //a.href = window.URL.createObjectURL(incoming.buffer.toString());
                 a.download = incoming.name;
                 a.click();
+                a.remove();
               }
             }
             else {

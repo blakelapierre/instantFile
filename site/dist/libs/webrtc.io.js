@@ -305,7 +305,9 @@ if (navigator.webkitGetUserMedia) {
           "sdp": session_description
         }
       }));
-    }, null, sdpConstraints);
+    }, function(err) {
+      console.log('Error creating PC Offer', err);
+    }, sdpConstraints);
   };
 
   rtc.receiveOffer = function(socketId, sdp) {
@@ -327,7 +329,9 @@ if (navigator.webkitGetUserMedia) {
       }));
       //TODO Unused variable!?
       var offer = pc.remoteDescription;
-    }, null, sdpConstraints);
+    }, function(err) {
+      console.log('Error sending PC answer', err)
+    }, sdpConstraints);
   };
 
 

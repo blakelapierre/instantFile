@@ -52,12 +52,14 @@ module.exports = ['$location', function($location) {
           stats.speed = offset / (now - startTime) / 1000;  
 
           backoff = 0;
+          stats.backoff = backoff;
 
           if (offset < buffer.byteLength) setTimeout(sendChunk, 0);
         } catch(e) {
           console.log(e);
           if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
           backoff += 100;
+          stats.backoff = backoff;
         }
 
         if (progress) progress(stats);

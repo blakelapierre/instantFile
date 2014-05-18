@@ -7,6 +7,8 @@ module.exports = ['$sce', function($sce) {
     },
     controller: function($scope) {
       $scope.$watch('file', function(file) {
+        $scope.type = null;
+        $scope.src = '';
         console.log(file);
         if (file) {
           var type = file.type.split('/')[0];
