@@ -18,6 +18,7 @@ module.exports = ['$location', function($location) {
 
     if (channel) {
       channel.send(fileName);
+      console.log(channel);
     }
   };
 
