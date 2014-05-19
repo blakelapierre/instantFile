@@ -7,29 +7,20 @@ module.exports = function commandCenterDirective() {
       var room = $location.path();
 
       $scope.transfers = [];
-console.log('joining', room);
-      rtc.joinRoom(room, function(roomManager) {
-        console.dir(roomManager);
 
+      rtc.joinRoom(room, function(roomManager) {
 
         roomManager.on('connections', function(connections) {
-          console.log('connections', connections);
           roomManager.fire('ready');
-          // for (var i = 0; i < connections.length; i++) {
-          //   var connection = connections[i];
-          //   roomManager.createDataChannel(connection, 'fileTransfer');
-          //   // rtc.requestFile(channel, room);
-          // }
         });
 
         roomManager.on('new connection', function(connectionID) {
-          console.log('new connection', connectionID);
+          
         });
 
         var channelManager = {};
         if (host.file) {
           roomManager.on('data stream data', function(channel, message) {
-            console.log('message', message);  
             if (message == room) {
               $scope.sendStats = rtc.sendFile(channel, host.file, function(stats) {
                 $scope.sendStats = stats;
@@ -57,8 +48,6 @@ console.log('joining', room);
               stats.received = incoming.position;
               stats.total = incoming.byteLength;
               stats.downSpeed = incoming.position / (now - incoming.start) / 1000;
-
-              console.log(stats);
         
               if (incoming.position == incoming.byteLength) {
                 var blob = new Blob(incoming.buffers, {type: incoming.type});
@@ -86,8 +75,6 @@ console.log('joining', room);
               };
 
               $scope.transfers.push(stats);
-
-              console.log('Incoming', type, 'file of byteLength', byteLength, '!');
 
               channelManager[channel] = {
                 byteLength: byteLength,

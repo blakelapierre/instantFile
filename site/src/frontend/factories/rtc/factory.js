@@ -14,7 +14,6 @@ module.exports = ['$location', function($location) {
 
   function requestFile(peerConnectionID, fileName) {
     var channel = rtc.dataChannels[peerConnectionID];
-    console.log('Requesting', fileName, 'on', peerConnectionID, rtc.dataChannels);  
 
     if (channel) {
       channel.send(fileName);

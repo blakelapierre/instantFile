@@ -2,9 +2,6 @@ module.exports = function instantFileDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    link: function($scope, element, attributes) {
-
-    },
     controller: ['$scope', '$location', 'host', function($scope, $location, host) {
       $scope.selectFile = function() {
         var input = document.createElement('input');

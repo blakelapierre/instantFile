@@ -11,7 +11,6 @@ module.exports = function fileDropAreaDirective() {
       'file': '=fileDropArea'
     },
     link: function($scope, element, attributes) {
-      console.log('link')
       element.bind('dragover', processDragOverEnter);
       element.bind('dragenter', processDragOverEnter);
 
