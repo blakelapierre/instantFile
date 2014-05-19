@@ -3,7 +3,11 @@ module.exports = function instantFileDirective() {
     restrict: 'E',
     template: require('./template.html'),
     controller: ['$scope', '$location', 'host', function($scope, $location, host) {
-      $scope.selectFile = function() {
+      $scope.activateInstantFile = function() {
+        if (host.file == null) $scope.promptForFile();
+      };
+
+      $scope.promptForFile = function() {
         var input = document.createElement('input');
         input.type = 'file';
 
