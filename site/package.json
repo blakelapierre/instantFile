@@ -27,7 +27,6 @@
   "dependencies": {
     "socket.io": "~0.9.16",
     "webrtc.io": "0.0.4",
-    "webrtc.io-client": "0.0.2-3",
     "express": "~4.2.0",
     "request": "~2.34.0"
   },
