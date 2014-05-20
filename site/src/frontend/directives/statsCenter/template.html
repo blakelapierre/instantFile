@@ -1,4 +1,15 @@
 <span class="size">{{file.size}} bytes</span>
-<div ng-repeat="transfer in transfers track by $index">
-  {{recieved}} / {{total}} {{downSpeed}}
+
+<div ng-show="showUrl">
+  <span class="url" select-on-click>{{currentUrl}}</span>
 </div>
+
+<div ng-repeat="transfer in transfers track by $index">
+  {{transfer.received}} / {{transfer.total}} {{transfer.downSpeed | number}} bps 
+  <div class="progress-container">
+    <div class="progress-bar" ng-style="{'width': (transfer.progress * 100) + '%'}"></div>
+  </div>
+</div>
+
+<h1>Who's Here</h1>
+<div ng-repeat="peer in connections">{{peer}}</div>

@@ -69,6 +69,7 @@ module.exports = function commandCenterDirective() {
 
             stats.received = incoming.position;
             stats.total = incoming.byteLength;
+            stats.progress = stats.received / stats.total;
             stats.downSpeed = incoming.position / (now - incoming.start) * 1000;
       
             if (incoming.position == incoming.byteLength) {

@@ -3,7 +3,14 @@ module.exports = function() {
     restrict: 'E',
     template: require('./template.html'),
     scope: {
-      file: '=file'
-    }
+      file: '=',
+      transfers: '=',
+      connections: '='
+    },
+    controller: ['$scope', 'host', function($scope, host) {
+      if (host.file) $scope.showUrl = true;
+
+      $scope.currentUrl = window.location.toString();
+    }]
   };
 };

@@ -11,7 +11,6 @@ module.exports = function controlCenterDirective() {
       if (host.file) {
         $scope.showInfo = true;
       }
-      $scope.currentUrl = window.location.toString();
 
       var fileName = host.file ? host.file.name : '';  // We probably shouldn't even do this
 

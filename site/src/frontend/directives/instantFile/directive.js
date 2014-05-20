@@ -4,7 +4,8 @@ module.exports = function instantFileDirective() {
     template: require('./template.html'),
     controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       $scope.activateInstantFile = function() {
-        if (host.file == null) $scope.promptForFile();
+        var path = $location.path();
+        if (path == '/' || path == '') $scope.promptForFile();
       };
 
       $scope.promptForFile = function() {
