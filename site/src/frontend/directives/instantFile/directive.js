@@ -2,7 +2,7 @@ module.exports = function instantFileDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    controller: ['$scope', '$location', 'host', function($scope, $location, host) {
+    controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       $scope.activateInstantFile = function() {
         if (host.file == null) $scope.promptForFile();
       };
@@ -13,9 +13,7 @@ module.exports = function instantFileDirective() {
 
         angular.element(input).bind('change', function(e) {
           host.file = e.target.files[0];
-          $location.path(host.file.name);
-
-          $scope.$digest(); // Necessary for $location.path to actually do something
+          launchCommandCenter();
         });
 
         input.click();
@@ -25,9 +23,16 @@ module.exports = function instantFileDirective() {
         host.file = droppedFile;
         
         if (droppedFile) {
-          $location.path(host.file.name);
+          launchCommandCenter();
         }
       });
+
+      function launchCommandCenter() {
+        rtc.launchCommandCenter(host, function(handle) {
+          $location.path(handle);
+          $scope.$digest();
+        });
+      }
     }]
   };
 };

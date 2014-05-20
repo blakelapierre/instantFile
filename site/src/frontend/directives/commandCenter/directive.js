@@ -8,7 +8,7 @@ module.exports = function commandCenterDirective() {
 
       $scope.transfers = [];
 
-      rtc.joinRoom(room, function(roomManager) {
+      var roomManager = rtc.roomManager;
 
         roomManager.on('connections', function(connections) {
           roomManager.fire('ready');
@@ -47,7 +47,7 @@ module.exports = function commandCenterDirective() {
 
               stats.received = incoming.position;
               stats.total = incoming.byteLength;
-              stats.downSpeed = incoming.position / (now - incoming.start) / 1000;
+              stats.downSpeed = incoming.position / (now - incoming.start) * 1000;
         
               if (incoming.position == incoming.byteLength) {
                 var blob = new Blob(incoming.buffers, {type: incoming.type});
@@ -89,8 +89,7 @@ module.exports = function commandCenterDirective() {
             $scope.$apply();
           });
         }
-      });
-
+        
       $scope.file = host.file;
     }]
   };

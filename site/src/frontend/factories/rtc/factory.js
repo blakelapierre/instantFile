@@ -1,7 +1,7 @@
 var webRTC = require('webrtc.io');
 
 module.exports = ['$location', function($location) {
-  function joinRoom(room, callback) {
+  function launchCommandCenter(room, callback) {
     console.log(room);
 
     var url = 'ws://' + $location.host() + ':2776';
@@ -9,7 +9,9 @@ module.exports = ['$location', function($location) {
     // need to handle subsequent calls of this function correctly
     webRTC.connect(url, room);
 
-    callback(webRTC);
+    webRTC.on('connections', function() {
+      callback(webRTC._me);
+    });
   };
 
   function requestFile(peerConnectionID, fileName) {
@@ -73,8 +75,9 @@ module.exports = ['$location', function($location) {
   };
 
   return {
-    joinRoom: joinRoom,
+    launchCommandCenter: launchCommandCenter,
     requestFile: requestFile,
-    sendFile: sendFile
+    sendFile: sendFile,
+    roomManager: webRTC
   }
 }];
