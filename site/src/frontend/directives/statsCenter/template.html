@@ -9,5 +9,12 @@
   </div>
 </div>
 
+<div ng-show="showSendStats">
+  {{sendStats.sent}} / {{sendStats.total}} {{sendStats.speed | number}} bps
+  <div class="progress-container">
+    <div class="progress-bar" ng-style="{'width': (sendStats.progress * 100) + '%'}"></div>
+  </div>
+</div>
+
 <h1>Who's Here</h1>
 <div ng-repeat="peer in connections">{{peer}}</div>

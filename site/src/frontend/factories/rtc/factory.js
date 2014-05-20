@@ -50,7 +50,8 @@ module.exports = ['$location', function($location) {
           channel.send(chunk);
           offset += size;
           stats.sent = offset;
-          stats.speed = offset / (now - startTime) / 1000;  
+          stats.speed = offset / (now - startTime) * 1000;  
+          stats.progress = stats.sent / stats.total;
 
           backoff = 0;
           stats.backoff = backoff;
