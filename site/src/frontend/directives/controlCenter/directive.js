@@ -15,7 +15,7 @@ module.exports = function controlCenterDirective() {
       var fileName = host.file ? host.file.name : '';  // We probably shouldn't even do this
 
       $scope.emailSubject = encodeURI('I want to send you ' + fileName);
-      $scope.emailBody = encodeURI('Get it from me at ' + $scope.currentUrl);
+      $scope.emailBody = encodeURI('Get it from me at ' + window.location.toString());
     }]
   };
 };
