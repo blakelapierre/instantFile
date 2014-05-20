@@ -112,7 +112,7 @@ function attachEvents(manager) {
               }
             });
           }
-          break;
+          if (room.length == 0) delete rtc.rooms[key];
         }
       }
       // we are leaved the room so lets notify about that
