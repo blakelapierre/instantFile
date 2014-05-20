@@ -10,6 +10,7 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   .directive('statsCenter',   require('./directives/statsCenter/directive'))
 
   .directive('fileDropArea',  require('./directives/util/fileDropArea/directive'))
+  .directive('fitText',       require('./directives/util/fitText/directive'))
 
   .factory('host',  require('./factories/host/factory'))
   .factory('rtc',   require('./factories/rtc/factory'))

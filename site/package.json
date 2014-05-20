@@ -55,6 +55,7 @@
   "browserify-shim": {
     "angular": "global:angular",
     "socket.io": "global:io",
-    "webrtc.io": "global:rtc"
+    "webrtc.io": "global:rtc",
+    "fitText": "global:fitText"
   }
 }

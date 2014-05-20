@@ -1,8 +1,10 @@
+var fitText = require('fitText');
+
 module.exports = function() {
   return {
-    restrict: 'E',
-    template: require('./template.html'),
+    restrict: 'A',
     link: function($scope, element, attributes) {
+      fitText(element);
     }
-  }
+  };
 };

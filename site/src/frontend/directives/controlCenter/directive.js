@@ -4,9 +4,6 @@ module.exports = function controlCenterDirective() {
     template: require('./template.html'),
     scope: {},
     link: function($scope, element, attributes) {
-      var shareButton = element.find('a');
-      window.fitText(shareButton);
-
     },
     controller: ['$scope', 'host', function($scope, host) {
       if (host.file) {
