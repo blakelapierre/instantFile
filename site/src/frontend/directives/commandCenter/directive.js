@@ -19,6 +19,8 @@ module.exports = function commandCenterDirective() {
 
       roomManager.on('new connection', function(connectionID) {
         console.log('new connection');
+        $scope.connections = roomManager.connections;
+        $scope.$digest();
       });
 
       var channelManager = {};
