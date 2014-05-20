@@ -158,7 +158,7 @@ function attachEvents(manager) {
 
         // inform the peers that they have a new peer
         if (soc) {
-          sendEvent(soc, 'new_peer_connected', socket.id, function(error) {
+          sendEvent(soc, 'new_peer_connected', {socketId: socket.id}, function(error) {
             if (error) {
               console.log(error);
             }
@@ -182,7 +182,18 @@ function attachEvents(manager) {
 
     var room = rtc.rooms[data.room] || [];
 
+    var index = room.indexOf(socket.id);
 
+    if (index >= 0) {
+      room.splice(index, 1);
+
+      for (var i = 0; i < room.length; i++) {
+        var id = room[i],
+            soc = rtc.getSocket(id);
+
+        sendEvent(soc, 'remove_peer_connected', {socketId: socket.id});
+      }
+    }
 
   });
 

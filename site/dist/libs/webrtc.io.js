@@ -139,6 +139,12 @@ if (navigator.webkitGetUserMedia) {
 
   rtc.dataChannelSupport = rtc.checkDataChannelSupport();
 
+    function sendEvent(socket, eventName, data) {
+      socket.send(JSON.stringify({
+        eventName: eventName,
+        data: data
+      }));
+    };
 
   /**
    * Connects to the websocket server.
@@ -147,14 +153,10 @@ if (navigator.webkitGetUserMedia) {
     //room = room || ""; // by default, join a room called the blank string
     rtc._socket = new WebSocket(server);
 
+
     rtc._socket.onopen = function() {
       if (room) {
-        rtc._socket.send(JSON.stringify({
-          "eventName": "join_room",
-          "data": {
-            "room": room
-          }
-        }));
+        sendEvent(rtc._socket, 'join_room', {room: room});
       }
 
       rtc._socket.onmessage = function(msg) {
@@ -216,17 +218,20 @@ if (navigator.webkitGetUserMedia) {
       rtc.on('your_id', function(data) {
         if (room == null) {
           room = data;
-          rtc._socket.send(JSON.stringify({
-            "eventName": "join_room",
-            "data": {
-              "room": room
-            }
-          }));
+          sendEvent(rtc._socket, 'join_room', {room: room});
         }
       });
 
       rtc.fire('connect');
     };
+  };
+
+  rtc.joinRoom = function(room) {
+
+  };
+
+  rtc.leaveRoom = function(room) {
+    sendEvent(rtc._socket, 'leave_room', {room: room});
   };
 
 
@@ -257,14 +262,11 @@ if (navigator.webkitGetUserMedia) {
     var pc = rtc.peerConnections[id] = new PeerConnection(rtc.SERVER(), config);
     pc.onicecandidate = function(event) {
       if (event.candidate) {
-        rtc._socket.send(JSON.stringify({
-          "eventName": "send_ice_candidate",
-          "data": {
-            "label": event.candidate.sdpMLineIndex,
-            "candidate": event.candidate.candidate,
-            "socketId": id
-          }
-        }));
+        sendEvent(rtc._socket, 'send_ice_candidate', {
+          "label": event.candidate.sdpMLineIndex,
+          "candidate": event.candidate.candidate,
+          "socketId": id 
+        });
       }
       rtc.fire('ice candidate', event.candidate);
     };
