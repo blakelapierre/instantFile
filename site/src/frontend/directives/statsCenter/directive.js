@@ -20,7 +20,7 @@ module.exports = function() {
       });
 
       $scope.$watchCollection('connections', function(connections) {
-        $scope.hasConnections = connections.length > 0;
+        $scope.hasConnections = connections && connections.length > 0;
       });
     }]
   };
