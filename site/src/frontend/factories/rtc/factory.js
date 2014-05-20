@@ -23,7 +23,7 @@ module.exports = ['$location', function($location) {
   };
 
   function sendFile(channel, file, progress) {
-    var chunkSize = 64 * 1024,
+    var chunkSize = 16 * 1024,
         reader = new FileReader(),
         stats = {};
 

@@ -1,3 +1,87 @@
+@keyframes box-shadow-color-run {
+  0% {
+    box-shadow: 0px 0px 130px 0px #333 inset;
+  }
+  10% {
+    box-shadow: 0px 0px 130px 0px #00f inset;
+  }
+  20% {
+    box-shadow: 0px 0px 130px 0px #0f0 inset;
+  }
+  30% {
+    box-shadow: 0px 0px 130px 0px #f00 inset;
+  }
+  40% {
+    box-shadow: 0px 0px 130px 0px #ff0 inset;
+  }
+  50% {
+    box-shadow: 0px 0px 130px 0px #0ff inset;
+  }
+  60% {
+    box-shadow: 0px 0px 130px 0px #f0f inset;
+  }
+  70% {
+    box-shadow: 0px 0px 130px 0px #0f0 inset;
+  }
+  80% {
+    box-shadow: 0px 0px 130px 0px #f00 inset;
+  }
+  90% {
+    box-shadow: 0px 0px 130px 0px #00f inset;
+  }
+  100% {
+    box-shadow: 0px 0px 130px 0px #333 inset;
+  }
+}
+
+@keyframes box-shadow-pulse {
+  0% {
+    box-shadow: 0px 0px 130px 0px #333 inset;
+  }
+  50% {
+    box-shadow: 0px 0px 30px 0px #999 inset;
+  }
+  100% {
+    box-shadow: 0px 0px 130px 0px #333 inset;
+  }
+}
+
+@keyframes color-run {
+  0% {
+    color: #333;
+  }
+  10% {
+    color: #00f;
+  }
+  20% {
+    color: #0f0;
+  }
+  30% {
+    color: #f00;
+  }
+  40% {
+    color: #ff0;
+  }
+  50% {
+    color: #0ff;
+  }
+  60% {
+    color: #f0f;
+  }
+  70% {
+    color: #0f0;
+  }
+  80% {
+    color: #f00;
+  }
+  90% {
+    color: #00f;
+  }
+  100% {
+    color: #333;
+  }
+}
+
 control-center {
   text-align: center;
 
@@ -6,11 +90,17 @@ control-center {
 
   .url {
     margin: 1em;
+    padding: 0.5em;
 
     font-size: 1.5em;
 
     color: #000;
     background-color: #fff;
+
+    text-shadow: 1px 3px 5px #111;
+    box-shadow: 0px 0px 130px 0px #333 inset;
+
+    animation: box-shadow-pulse 3s 2 linear;
   }
 
   a.share {
