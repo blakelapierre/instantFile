@@ -17,10 +17,16 @@ module.exports = function commandCenterDirective() {
         $scope.$digest();
       });
 
-      roomManager.on('new connection', function(connectionID) {
+      roomManager.on('new connection', function(data) {
         console.log('new connection');
         $scope.connections = roomManager.connections;
+        console.log($scope.connections);
         $scope.$digest();
+      });
+
+      roomManager.on('disconnect stream', function(data) {
+        console.log('disconnected', data);
+        $scope.$apply();
       });
 
       var channelManager = {};
