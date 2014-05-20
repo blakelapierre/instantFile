@@ -18,6 +18,10 @@ module.exports = function() {
       $scope.$watch('sendStats', function(sendStats) {
         if (sendStats) $scope.showSendStats = true;
       });
+
+      $scope.$watchCollection('connections', function(connections) {
+        $scope.hasConnections = connections.length > 0;
+      });
     }]
   };
 };
