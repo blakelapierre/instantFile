@@ -61,20 +61,30 @@ module.exports.listen = function(server) {
   return manager;
 };
 
+
 function attachEvents(manager) {
+
+  // What is this callback?
+  function sendEvent(socket, eventName, data, callback) {
+    socket.send(JSON.stringify({
+      eventName: eventName,
+      data: data
+    }), callback);
+  }
 
   manager.on('connection', function(socket) {
     iolog('connect');
+
+    // Does Chrome/V8 optimize this up? Or will it create a new function each time this
+    // handler is called? Does it matter?
+    
 
     socket.id = id();
     iolog('new socket got id: ' + socket.id);
 
     rtc.sockets.push(socket);
 
-    socket.send(JSON.stringify({
-      "eventName": 'your_id', 
-      "data": socket.id
-    }));
+    sendEvent(socket, 'your_id', socket.id);
 
     socket.on('message', function(msg) {
       var json = JSON.parse(msg);
@@ -101,12 +111,8 @@ function attachEvents(manager) {
           for (var j = 0; j < room.length; j++) {
             console.log(room[j]);
             var soc = rtc.getSocket(room[j]);
-            soc.send(JSON.stringify({
-              "eventName": "remove_peer_connected",
-              "data": {
-                "socketId": socket.id
-              }
-            }), function(error) {
+
+            sendEvent(soc, 'remove_peer_connected', socket.id, function(error) {
               if (error) {
                 console.log(error);
               }
@@ -152,12 +158,7 @@ function attachEvents(manager) {
 
         // inform the peers that they have a new peer
         if (soc) {
-          soc.send(JSON.stringify({
-            "eventName": "new_peer_connected",
-            "data":{
-              "socketId": socket.id
-            }
-          }), function(error) {
+          sendEvent(soc, 'new_peer_connected', socket.id, function(error) {
             if (error) {
               console.log(error);
             }
@@ -166,17 +167,23 @@ function attachEvents(manager) {
       }
     }
     // send new peer a list of all prior peers
-    socket.send(JSON.stringify({
-      "eventName": "get_peers",
-      "data": {
-        "connections": connectionsId,
-        "you": socket.id
-      }
-    }), function(error) {
+    sendEvent(socket, 'get_peers', {
+      connections: connectionsId,
+      you: socket.id
+    }, function(error) {
       if (error) {
         console.log(error);
       }
     });
+  });
+
+  rtc.on('leave_room', function(data, socket) {
+    iolog('leave_room');
+
+    var room = rtc.rooms[data.room] || [];
+
+
+
   });
 
   //Receive ICE candidates and send to the correct socket
@@ -185,14 +192,11 @@ function attachEvents(manager) {
     var soc = rtc.getSocket(data.socketId);
 
     if (soc) {
-      soc.send(JSON.stringify({
-        "eventName": "receive_ice_candidate",
-        "data": {
-          "label": data.label,
-          "candidate": data.candidate,
-          "socketId": socket.id
-        }
-      }), function(error) {
+    sendEvent(soc, 'receive_ice_candidate', {
+        "label": data.label,
+        "candidate": data.candidate,
+        "socketId": socket.id
+      }, function(error) {
         if (error) {
           console.log(error);
         }
@@ -209,13 +213,10 @@ function attachEvents(manager) {
     var soc = rtc.getSocket(data.socketId);
 
     if (soc) {
-      soc.send(JSON.stringify({
-        "eventName": "receive_offer",
-        "data": {
+      sendEvent(soc, 'receive_offer', {
           "sdp": data.sdp,
           "socketId": socket.id
-      }
-      }), function(error) {
+      }, function(error) {
         if (error) {
           console.log(error);
         }
@@ -231,13 +232,10 @@ function attachEvents(manager) {
     var soc = rtc.getSocket( data.socketId);
 
     if (soc) {
-      soc.send(JSON.stringify({
-        "eventName": "receive_answer",
-        "data" : {
-          "sdp": data.sdp,
-          "socketId": socket.id
-        }
-      }), function(error) {
+      sendEvent(soc, 'receive_answer', {
+        "sdp": data.sdp,
+        "socketId": socket.id
+      }, function(error) {
         if (error) {
           console.log(error);
         }

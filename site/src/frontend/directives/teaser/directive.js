@@ -2,7 +2,8 @@ module.exports = function() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    link: function($scope, element, attributes) {
-    }
+    controller: ['$scope', 'host', function($scope, host) {
+      host.file = null;
+    }]
   }
 };

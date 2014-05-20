@@ -12,16 +12,21 @@ module.exports = function commandCenterDirective() {
 
       roomManager.on('connections', function(connections) {
         console.log(connections);
+        if (connections.length == 0) {
+          // $location.path('/');
+          // $scope.$apply();
+          return;
+        }
         $scope.connections = connections;
         roomManager.fire('ready');
-        $scope.$digest();
+        $scope.$apply();
       });
 
       roomManager.on('new connection', function(data) {
         console.log('new connection');
         $scope.connections = roomManager.connections;
         console.log($scope.connections);
-        $scope.$digest();
+        $scope.$apply();
       });
 
       roomManager.on('disconnect stream', function(data) {
