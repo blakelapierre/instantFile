@@ -4,20 +4,21 @@ module.exports = function commandCenterDirective() {
     template: require('./template.html'),
     controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
 
-      var room = $location.path(),
+      var room = $location.path().substr(1),
           roomManager = rtc.roomManager;
 
       $scope.transfers = [];
       $scope.file = host.file;
 
-
       roomManager.on('connections', function(connections) {
+        console.log(connections);
         $scope.connections = connections;
         roomManager.fire('ready');
+        $scope.$digest();
       });
 
       roomManager.on('new connection', function(connectionID) {
-        
+        console.log('new connection');
       });
 
       var channelManager = {};
@@ -32,7 +33,13 @@ module.exports = function commandCenterDirective() {
         });
       }
       else {
+        rtc.launchCommandCenter(room, function(handle) {
+          console.log('connected, your handle', handle, rtc);
+          rtc.requestFile(room, room);
+        });
+
         roomManager.on('data stream open', function(channel) {
+          console.log(channel);
           channel.send(room);
         });
 

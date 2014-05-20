@@ -1,7 +1,7 @@
 module.exports = function(config, callback) {
   var path = require('path'),
       express = require('express'),
-      webRTC = require('webrtc.io'),
+      webRTC = require('./lib/webrtc.io'),
       app = express();
 
   
@@ -23,7 +23,8 @@ module.exports = function(config, callback) {
 
     res.json({
       sockets: socketCount,
-      rooms: roomCount
+      rooms: roomCount,
+      r: rtcManager.rtc.rooms
     });
   });
 

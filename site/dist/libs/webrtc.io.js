@@ -144,17 +144,18 @@ if (navigator.webkitGetUserMedia) {
    * Connects to the websocket server.
    */
   rtc.connect = function(server, room) {
-    room = room || ""; // by default, join a room called the blank string
+    //room = room || ""; // by default, join a room called the blank string
     rtc._socket = new WebSocket(server);
 
     rtc._socket.onopen = function() {
-
-      rtc._socket.send(JSON.stringify({
-        "eventName": "join_room",
-        "data": {
-          "room": room
-        }
-      }));
+      if (room) {
+        rtc._socket.send(JSON.stringify({
+          "eventName": "join_room",
+          "data": {
+            "room": room
+          }
+        }));
+      }
 
       rtc._socket.onmessage = function(msg) {
         var json = JSON.parse(msg.data);
@@ -210,6 +211,18 @@ if (navigator.webkitGetUserMedia) {
       rtc.on('receive_answer', function(data) {
         rtc.receiveAnswer(data.socketId, data.sdp);
         rtc.fire('receive answer', data);
+      });
+
+      rtc.on('your_id', function(data) {
+        if (room == null) {
+          room = data;
+          rtc._socket.send(JSON.stringify({
+            "eventName": "join_room",
+            "data": {
+              "room": room
+            }
+          }));
+        }
       });
 
       rtc.fire('connect');

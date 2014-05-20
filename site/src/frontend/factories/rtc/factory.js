@@ -10,7 +10,7 @@ module.exports = ['$location', function($location) {
     webRTC.connect(url, room);
 
     webRTC.on('connections', function() {
-      callback(webRTC._me);
+      if (callback) callback(webRTC._me);
     });
   };
 

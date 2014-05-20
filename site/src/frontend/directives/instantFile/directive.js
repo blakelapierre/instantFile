@@ -28,7 +28,7 @@ module.exports = function instantFileDirective() {
       });
 
       function launchCommandCenter() {
-        rtc.launchCommandCenter(host, function(handle) {
+        rtc.launchCommandCenter(null, function(handle) {
           $location.path(handle);
           $scope.$digest();
         });

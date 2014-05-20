@@ -28,7 +28,8 @@
     "socket.io": "~0.9.16",
     "webrtc.io": "0.0.4",
     "express": "~4.2.0",
-    "request": "~2.34.0"
+    "request": "~2.34.0",
+    "ws": "~0.4.31"
   },
   "devDependencies": {
     "grunt": "~0.4.4",
