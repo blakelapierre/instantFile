@@ -1,10 +1,8 @@
 <div ng-show="showInfo">
-  <p>Anyone who visits your current URL:</p>
   <span class="url" select-on-click>{{currentUrl}}</span> 
-
-  <p>Will automatically download the file you dropped.</p>
-
-  <p>The file transfer happens over an <a href="http://en.wikipedia.org/wiki/WebRTC">encrypted, peer-to-peer channel</a> created inside of your browser. As soon as you close this window, the file is no longer available.</p>
 
   <a class="share" href="mailto:?subject={{emailSubject}}&body={{emailBody}}" target="_blank" fit-text>SEND FILE</a>
 </div>
+
+<h1>Who's Here</h1>
+<div ng-repeat="peer in connections">{{peer}}</div>

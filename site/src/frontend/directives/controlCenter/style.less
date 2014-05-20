@@ -36,13 +36,13 @@
 
 @keyframes box-shadow-pulse {
   0% {
-    box-shadow: 0px 0px 130px 0px #333 inset;
+    box-shadow: 0px 0px 130px 0px #999 inset;
   }
   50% {
-    box-shadow: 0px 0px 30px 0px #999 inset;
+    box-shadow: 0px 0px 30px 0px #fff inset;
   }
   100% {
-    box-shadow: 0px 0px 130px 0px #333 inset;
+    box-shadow: 0px 0px 130px 0px #999 inset;
   }
 }
 
@@ -88,6 +88,8 @@ control-center {
   color: #6f6;
   text-shadow: 0 0 6px #9f9;
 
+  overflow-y: auto;
+
   .url {
     margin: 1em;
     padding: 0.5em;
@@ -98,7 +100,7 @@ control-center {
     background-color: #fff;
 
     text-shadow: 1px 3px 5px #111;
-    box-shadow: 0px 0px 130px 0px #333 inset;
+    box-shadow: 0px 0px 130px 0px #999 inset;
 
     animation: box-shadow-pulse 3s 2 linear;
   }

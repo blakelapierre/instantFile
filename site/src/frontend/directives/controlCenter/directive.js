@@ -2,7 +2,9 @@ module.exports = function controlCenterDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    scope: {},
+    scope: {
+      connections: '='
+    },
     link: function($scope, element, attributes) {
     },
     controller: ['$scope', 'host', function($scope, host) {
