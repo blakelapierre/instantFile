@@ -111,6 +111,11 @@ module.exports = function(grunt) {
           script: 'src/app.js',
           args: ['debug']
         }
+      },
+      prod: {
+        options: {
+          script: 'src/app.js'
+        }
       }
     },
     less: {
@@ -139,7 +144,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('serve', 'test', function() {
-    grunt.task.run('copy:libs', 'preprocess:index', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:dev', 'watch:site');
+    grunt.task.run('copy:libs', 'preprocess:index', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:prod', 'watch:site');
   });
 
   grunt.registerTask('debug', 'test', function() {
