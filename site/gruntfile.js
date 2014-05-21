@@ -14,6 +14,9 @@ module.exports = function(grunt) {
       }
     },
     watch: {
+      prod: {
+        files: ['src/app.js']
+      },
       site: {
         files: ['src/app.js', 'src/**/*.*', 'dist/index.html'],
         tasks: ['preprocess:livereload', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:dev'],
@@ -144,7 +147,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('serve', 'test', function() {
-    grunt.task.run('copy:libs', 'preprocess:index', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:prod');
+    grunt.task.run('copy:libs', 'preprocess:index', 'less:bundle', 'autoprefixer:dist', 'browserify:instantFile', 'express:prod', 'watch:prod');
   });
 
   grunt.registerTask('debug', 'test', function() {
