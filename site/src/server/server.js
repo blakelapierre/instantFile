@@ -7,14 +7,10 @@ module.exports = function(config, callback) {
       app = express();
 
   var redirectServer = http.createServer(function requireHTTPS(req, res, next) {
-    if (!req.secure) {
-      res.writeHead(302, {
-        'Location': 'https://' + req.headers['host'] + req.url
-      });
-      res.end();
-      return;
-    }
-    next();
+    res.writeHead(302, {
+      'Location': 'https://' + req.headers['host'] + req.url
+    });
+    res.end();
   });
 
   
