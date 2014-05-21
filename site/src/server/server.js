@@ -1,16 +1,33 @@
 module.exports = function(config, callback) {
-  var path = require('path'),
+  var https = require('https'),
+      http = require('http'),
+      path = require('path'),
       express = require('express'),
       webRTC = require('./lib/webrtc.io'),
       app = express();
+
+  var redirectServer = http.createServer(function requireHTTPS(req, res, next) {
+    if (!req.secure) {
+      res.writeHead(302, {
+        'Location': 'https://' + req.headers['host'] + req.url
+      });
+      res.end();
+      return;
+    }
+    next();
+  });
 
   
   var serverRoot = config.serverRoot;
 
   app.use(express.static(path.join(serverRoot, '..', 'dist')));
 
-  var webserver = app.listen(config.port),
-      rtcManager = webRTC.listen(config.rtcport);
+  var sslOptions = {
+        key: config.key,
+        cert: config.cert
+      },
+      webserver = https.createServer(sslOptions, app),
+      rtcManager = webRTC.listen(webserver);
 
   var router = express.Router();
 
@@ -30,5 +47,8 @@ module.exports = function(config, callback) {
 
   app.use('/', router);
 
-  callback(webserver, rtcManager);
+  webserver.listen(config.port);
+  redirectServer.listen(config.httpPort);
+
+  callback(webserver, rtcManager, redirectServer);
 };

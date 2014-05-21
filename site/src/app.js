@@ -40,8 +40,11 @@ module.exports = startServer;
 
 startServer({
   port: 2777,
+  httpPort: 2778,
   rtcport: 2776,
   serverRoot: __dirname,
   repoLocation: path.join(__dirname, './../../'),
-  distRoot: path.join(__dirname, './../dist')
+  distRoot: path.join(__dirname, './../dist'),
+  key: fs.readFileSync(path.join(__dirname, './server/cert/instafile.io.key')),
+  cert: fs.readFileSync(path.join(__dirname, './server/cert/instafile.io.cert'))
 }, function(webserver, io, rtc) { });

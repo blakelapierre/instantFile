@@ -4,7 +4,7 @@ module.exports = ['$location', function($location) {
   function launchCommandCenter(room, callback) {
     console.log(room);
 
-    var url = 'ws://' + $location.host() + ':2776';
+    var url = 'ws://' + $location.host() + ':2777';
 
     // need to handle subsequent calls of this function correctly
     webRTC.connect(url, room);
