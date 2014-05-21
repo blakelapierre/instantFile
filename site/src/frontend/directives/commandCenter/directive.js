@@ -38,23 +38,28 @@ module.exports = function commandCenterDirective() {
 
       var channelManager = {};
       if (host.file) {
-        roomManager.on('data stream data', function(channel, message) {
+        roomManager.on('data stream data', function(connection, channel, message) {
           if (message == room) {
-            $scope.sendStats = rtc.sendFile(channel, host.file, function(stats) {
-              $scope.sendStats = stats;
-              $scope.$apply();
+            var transfer = rtc.sendFile(channel, host.file, function(stats) {
+              $scope.$apply(); // throttle this
             });
+            
+            transfer.id = channel.id;
+
+            $scope.transfers.push(transfer);
           }
+        });
+
+        roomManager.on('data stream close', function(channel) {
+          console.log('close', channel);
+          _.remove($scope.transfers, function(transfer) {
+            return transfer.id === channel.id;
+          });
         });
       }
       else {
-        rtc.launchCommandCenter(room, function(handle) {
-          console.log('connected, your handle', handle, rtc);
-          rtc.requestFile(room, room);
-        });
-
         roomManager.on('data stream open', function(channel) {
-          console.log(channel);
+          console.log('open', channel);
           channel.send(room);
         });
 
@@ -62,8 +67,8 @@ module.exports = function commandCenterDirective() {
           $scope.$apply();
         }, 50);
 
-        roomManager.on('data stream data', function(channel, message) {
-          var incoming = channelManager[channel];
+        roomManager.on('data stream data', function(connection, channel, message) {
+          var incoming = channelManager[connection];
           if (incoming) {
             var now = new Date().getTime(),
                 stats = incoming.stats;
@@ -72,10 +77,10 @@ module.exports = function commandCenterDirective() {
 
             incoming.position += message.byteLength || message.size; // Firefox uses 'size'
 
-            stats.received = incoming.position;
+            stats.transferred = incoming.position;
             stats.total = incoming.byteLength;
-            stats.progress = stats.received / stats.total;
-            stats.downSpeed = incoming.position / (now - incoming.start) * 1000;
+            stats.progress = stats.transferred / stats.total;
+            stats.speed = incoming.position / (now - incoming.start) * 1000;
       
             if (incoming.position == incoming.byteLength) {
               var blob = new Blob(incoming.buffers, {type: incoming.type});
@@ -96,26 +101,34 @@ module.exports = function commandCenterDirective() {
                 name = parts[1],
                 type = parts[2];
 
-            var stats = {
-              received: 0,
-              total: byteLength,
-              downSpeed: 0
-            };
+            if (parts.length == 3) {
 
-            $scope.transfers.push(stats);
+              var stats = {
+                transferred: 0,
+                total: byteLength,
+                speed: 0
+              };
 
-            channelManager[channel] = {
-              byteLength: byteLength,
-              name: name,
-              type: type,
-              stats: stats,
-              position: 0,
-              buffers: [],
-              start: new Date().getTime()
-            };
+              $scope.transfers.push(stats);
+
+              channelManager[connection] = {
+                byteLength: byteLength,
+                name: name,
+                type: type,
+                stats: stats,
+                position: 0,
+                buffers: [],
+                start: new Date().getTime()
+              };
+            }
           }
 
           queueApply();
+        });
+
+        rtc.launchCommandCenter(room, function(handle) {
+          console.log('connected, your handle', handle, rtc);
+          rtc.requestFile(room, room);
         });
       }
     }]

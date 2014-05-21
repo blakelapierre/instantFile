@@ -4,7 +4,7 @@ module.exports = ['$location', function($location) {
   function launchCommandCenter(room, callback) {
     console.log(room);
 
-    var url = 'wss://' + $location.host();
+    var url = 'wss://' + window.location.host;
 
     // need to handle subsequent calls of this function correctly
     webRTC.connect(url, room);
@@ -22,14 +22,30 @@ module.exports = ['$location', function($location) {
     }
   };
 
+  var fileBuffers = {};
+  function getFileBuffer(file, callback) {
+    var buffer = fileBuffers[file];
+    if (buffer) callback(buffer);
+    else {
+      var reader = new FileReader();
+      
+      reader.onload = function(e) {
+        var buffer = e.target.result;
+
+        fileBuffers[file] = buffer;
+        callback(buffer);
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
   function sendFile(channel, file, progress) {
     var chunkSize = 64 * 1024,
         reader = new FileReader(),
         stats = {};
 
-    reader.onload = function(e) {
-      var buffer = e.target.result;
-
+    getFileBuffer(file, function(buffer) {
       channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
 
       var offset = 0,
@@ -38,7 +54,7 @@ module.exports = ['$location', function($location) {
           startTime = new Date().getTime();
 
       stats.startTime = startTime;
-      stats.sent = 0;
+      stats.transferred = 0;
       stats.total = buffer.byteLength;
       stats.speed = 0;
 
@@ -54,9 +70,9 @@ module.exports = ['$location', function($location) {
             offset += size;
             backoff = 0;
 
-            stats.sent = offset;
+            stats.transferred = offset;
             stats.speed = offset / (now - startTime) * 1000;  
-            stats.progress = stats.sent / stats.total;
+            stats.progress = stats.transferred / stats.total;
             stats.backoff = backoff;
 
             iterations++;
@@ -64,21 +80,19 @@ module.exports = ['$location', function($location) {
             backoff += 100;
             stats.backoff = backoff;
             
-            iterations = 1;
+            iterations--;
             break; // get me out of this for loop!
           }
-
-          if (progress) progress(stats);
           if (stats.progress >= 1) return;
         }
+
+        if (progress) progress(stats);
 
         if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
       };
 
       sendChunk();
-    };
-
-    reader.readAsArrayBuffer(file);
+    });
 
     return stats;
   };
