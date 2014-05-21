@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 module.exports = function commandCenterDirective() {
   return {
     restrict: 'E',
@@ -56,8 +58,11 @@ module.exports = function commandCenterDirective() {
           channel.send(room);
         });
 
+        var queueApply = _.throttle(function() {
+          $scope.$apply();
+        }, 50);
+
         roomManager.on('data stream data', function(channel, message) {
-          
           var incoming = channelManager[channel];
           if (incoming) {
             var now = new Date().getTime(),
@@ -109,7 +114,8 @@ module.exports = function commandCenterDirective() {
               start: new Date().getTime()
             };
           }
-          $scope.$apply();
+
+          queueApply();
         });
       }
     }]
