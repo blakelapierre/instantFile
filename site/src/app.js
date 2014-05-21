@@ -39,8 +39,8 @@ function getPublicAddress (deliver) {
 module.exports = startServer;
 
 startServer({
-  port: 2777,
-  httpPort: 2778,
+  port: 2778,
+  httpPort: 2777,
   rtcport: 2776,
   serverRoot: __dirname,
   repoLocation: path.join(__dirname, './../../'),
