@@ -23,6 +23,7 @@ module.exports = function(config, callback) {
   app.use(express.static(path.join(serverRoot, '..', 'dist')));
 
   var sslOptions = {
+        ca: config.ca,
         key: config.key,
         cert: config.cert
       },

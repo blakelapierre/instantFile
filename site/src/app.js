@@ -45,6 +45,7 @@ startServer({
   serverRoot: __dirname,
   repoLocation: path.join(__dirname, './../../'),
   distRoot: path.join(__dirname, './../dist'),
+  ca: [fs.readFileSync(path.join(__dirname, './server/cert/GandiStandardSSLCA.crt'))],
   key: fs.readFileSync(path.join(__dirname, './server/cert/instafile.io.key')),
   cert: fs.readFileSync(path.join(__dirname, './server/cert/instafile.io.cert'))
 }, function(webserver, io, rtc) { });
