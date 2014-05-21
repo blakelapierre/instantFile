@@ -3,14 +3,14 @@
 </div>
 
 <div ng-repeat="transfer in transfers track by $index">
-  {{transfer.received}} / {{transfer.total}} {{transfer.downSpeed | number}} bps 
+  {{transfer.received}} / {{transfer.total}} {{transfer.downSpeed | number : 0}} B/s 
   <div class="progress-container">
     <div class="progress-bar" ng-style="{'width': (transfer.progress * 100) + '%'}"></div>
   </div>
 </div>
 
 <div ng-show="showSendStats && hasConnections">
-  {{sendStats.sent}} / {{sendStats.total}} {{sendStats.speed | number}} bps
+  {{sendStats.sent}} / {{sendStats.total}} {{sendStats.speed | number : 0}} B/s
   <div class="progress-container">
     <div class="progress-bar" ng-style="{'width': (sendStats.progress * 100) + '%'}"></div>
   </div>
