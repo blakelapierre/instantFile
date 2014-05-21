@@ -50,22 +50,26 @@ module.exports = ['$location', function($location) {
 
           try {
             channel.send(chunk);
+
             offset += size;
+            backoff = 0;
+
             stats.sent = offset;
             stats.speed = offset / (now - startTime) * 1000;  
             stats.progress = stats.sent / stats.total;
-
-            backoff = 0;
             stats.backoff = backoff;
+
             iterations++;
           } catch(e) {
             backoff += 100;
             stats.backoff = backoff;
+            
             iterations = 1;
             break; // get me out of this for loop!
           }
 
           if (progress) progress(stats);
+          if (stats.progress >= 1) return;
         }
 
         if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
