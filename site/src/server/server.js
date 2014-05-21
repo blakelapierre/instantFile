@@ -28,11 +28,6 @@ module.exports = function(config, callback) {
     });
   });
 
-  router.get('/3B4B24D2B37E1F30CCA3BDC11FBD9E7D.txt', function(req, res) {
-    res.set('Content-Type', 'text/plain');
-    res.send(200, '869E9770D6D5C3A312067A953FE3C4DC7A3B58CC\ncomodoca.com');
-  });
-
   app.use('/', router);
 
   callback(webserver, rtcManager);
