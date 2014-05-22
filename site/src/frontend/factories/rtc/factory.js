@@ -58,6 +58,8 @@ module.exports = ['$location', function($location) {
       stats.total = buffer.byteLength;
       stats.speed = 0;
 
+      console.log(channel);
+
       function sendChunk() {
         for (var i = 0; i < iterations; i++) {
           var now = new Date().getTime(),
@@ -75,7 +77,7 @@ module.exports = ['$location', function($location) {
             stats.progress = stats.transferred / stats.total;
             stats.backoff = backoff;
 
-            iterations++;
+            if (iterations < 10) iterations++;
           } catch(e) {
             backoff += 100;
             stats.backoff = backoff;
@@ -83,7 +85,10 @@ module.exports = ['$location', function($location) {
             iterations--;
             break; // get me out of this for loop!
           }
-          if (stats.progress >= 1) return;
+          if (stats.progress >= 1) {
+            progress(stats)
+            return;
+          }
         }
 
         if (progress) progress(stats);

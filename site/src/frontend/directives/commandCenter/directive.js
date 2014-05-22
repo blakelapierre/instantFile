@@ -65,7 +65,7 @@ module.exports = function commandCenterDirective() {
 
         var queueApply = _.throttle(function() {
           $scope.$apply();
-        }, 50);
+        }, 100);
 
         roomManager.on('data stream data', function(connection, channel, message) {
           var incoming = channelManager[connection];
