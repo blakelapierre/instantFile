@@ -255,12 +255,9 @@ function connectToSignal(server, onReady) {
         peer.connect();
         connection = peer.peerConnection;
       }      
-
-console.log('offer', offer, connection);
       
       connection.setRemoteDescription(new RTCSessionDescription(offer), function() {
         connection.createAnswer(function(answer) {
-          console.log('answer', answer);
           connection.setLocalDescription(answer, function() {
             emit('peer answer', {
               peerID: peerID,
@@ -274,7 +271,6 @@ console.log('offer', offer, connection);
           fire('peer error send answer', peer, err, offer);
         });
       }, function(err) {
-        console.dir(err);
         fire('peer error set_remote_description', peer, err, offer);
       });
       fire('peer receive offer', peer, offer);
