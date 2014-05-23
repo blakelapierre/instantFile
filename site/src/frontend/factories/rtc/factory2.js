@@ -85,6 +85,7 @@ function connectToSignal(server, onReady) {
       var peer = {
         id: id,
         channels: channels,
+        streams: streams,
         connect: function() { 
           peer.peerConnection = createConnection();
         },
@@ -100,31 +101,31 @@ function connectToSignal(server, onReady) {
       function attachToChannel(channel, handlers) {
         var label = channel.label;
 
-        function call(name, arg) {
-          (handlers[name] || function () {})(arg);
+        function call(name, arg1, arg2) {
+          (handlers[name] || function () {})(arg1, arg2);
         };
 
         channel.onopen = function() {
-          call('open');
-          fire('peer data_channel open', peer, label);
+          call('open', channel);
+          fire('peer data_channel open', peer, channel);
         };
 
         channel.onclose = function() {
           _.remove(channels, function(c) { return c.label === label; });
           delete channels[label];
 
-          call('close');
-          fire('peer data_channel close', peer, label);
+          call('close', channel);
+          fire('peer data_channel close', peer, channel);
         };
 
         channel.onmessage = function(message) {
-          call('message', message);
-          fire('peer data_channel message', peer, label, message);
+          call('message', channel, message.data);
+          fire('peer data_channel message', peer, channel, message);
         };
 
         channel.onerror = function(error) {
-          call('error', error);
-          fire('peer data_channel error', peer, label, error);
+          call('error', channel, error);
+          fire('peer data_channel error', peer, channel, error);
         };
 
         channels.push(channel);
@@ -210,6 +211,7 @@ function connectToSignal(server, onReady) {
 
     function removePeerByID(id) {
       var peer = getPeer(id);
+      if (peer.peerConnection) peer.peerConnection.close();
       _.remove(peers, function(peer) { return peer.id === id; });
       delete peersHash[id];
       fire('peer removed', peer);

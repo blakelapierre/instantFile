@@ -62,6 +62,8 @@ module.exports = ['$location', function($location) {
       console.log(channel);
 
       function sendChunk() {
+        if (channel.readyState != 'open') return;
+
         for (var i = 0; i < iterations; i++) {
           var now = new Date().getTime(),
               size = Math.min(chunkSize, buffer.byteLength - offset),
@@ -83,7 +85,7 @@ module.exports = ['$location', function($location) {
             backoff += 100;
             stats.backoff = backoff;
             
-            iterations--;
+            if (iterations > 1) iterations--;
             break; // get me out of this for loop!
           }
           if (stats.progress >= 1) {

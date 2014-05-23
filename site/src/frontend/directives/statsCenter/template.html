@@ -18,5 +18,5 @@
 
 <div ng-show="hasPeers">
   <h1>Who's Here</h1>
-  <div ng-repeat="peer in peers">{{peer.id}} {{peer.channels}}</div>
+  <div ng-repeat="peer in peers">{{peer.id}} {{peer.channels.length}}</div>
 </div>

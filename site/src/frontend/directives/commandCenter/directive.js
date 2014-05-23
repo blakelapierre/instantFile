@@ -13,6 +13,25 @@ module.exports = function commandCenterDirective() {
 
       signal.joinRoom(room);
 
+      var fileServeHandlers = (function() {
+        return {
+          open: function(channel) {
+            channel.send('test');
+          },
+          close: function(channel) {},
+          message: function(channel, message) {
+            console.log('message', message);
+            if (message == room) {
+              console.log('got file request');
+              rtc.sendFile(channel, host.file, function(stats) {
+                console.log(stats);
+              });
+            }
+          },
+          error: function(channel, error) {}
+        }
+      });
+
       signal.on({
         'peer added': function(peer) {
           console.log(peer);
@@ -20,12 +39,7 @@ module.exports = function commandCenterDirective() {
           console.log(signal.myID, room);
           if (signal.myID == room) {
             peer.connect();
-            var channel = peer.createChannel('instafile.io', {}, {
-              open: function() {
-                console.log('open');
-                channel.send('test');
-              }
-            });
+            var channel = peer.createChannel('instafile.io', {}, fileServeHandlers());
           }
           $scope.$apply();
         },
@@ -51,6 +65,7 @@ module.exports = function commandCenterDirective() {
           console.log('peer signaling_state_change', arguments);
         },
         'peer data_channel connected': function(peer, channel, handlers) {
+          attachChannel(channel, handlers);
           console.log('peer data_channel connected', peer, channel, handlers);
         },
         'peer error send offer': function(peer, error, offer) {
@@ -63,6 +78,86 @@ module.exports = function commandCenterDirective() {
           console.log('peer error set_remote_description', error);
         }
       });
+
+      function attachChannel(channel, handlers) {
+        var queueApply = _.throttle(function() {
+          $scope.$apply();
+        }, 50);
+
+        handlers.open = function(channel) {
+          // Request file
+          channel.send(room);
+        };
+
+        handlers.close = function(channel) {
+
+        };
+
+        handlers.message = function(channel, message) {
+          var incoming = channel.transfer;
+          if (incoming) {
+            var now = new Date().getTime(),
+                stats = incoming.stats;
+
+            incoming.buffers.push(message);
+
+            incoming.position += message.byteLength || message.size; // Firefox uses 'size'
+
+            stats.transferred = incoming.position;
+            stats.total = incoming.byteLength;
+            stats.progress = stats.transferred / stats.total;
+            stats.speed = incoming.position / (now - incoming.start) * 1000;
+      
+            if (incoming.position == incoming.byteLength) {
+              var blob = new Blob(incoming.buffers, {type: incoming.type});
+
+              $scope.file = blob;
+
+              var a = document.createElement('a');
+              document.body.appendChild(a); // Firefox apparently needs this
+              a.href = window.URL.createObjectURL(blob);
+              a.download = incoming.name;
+              a.click();
+              a.remove();
+            }
+          }
+          else {
+            var parts = message.toString().split(';'),
+                byteLength = parseInt(parts[0]),
+                name = parts[1],
+                type = parts[2];
+
+            if (parts.length == 3) {
+
+              var stats = {
+                transferred: 0,
+                total: byteLength,
+                speed: 0
+              };
+
+              $scope.transfers.push(stats);
+
+              channel.transfer = {
+                byteLength: byteLength,
+                name: name,
+                type: type,
+                stats: stats,
+                position: 0,
+                buffers: [],
+                start: new Date().getTime()
+              };
+            }
+          }
+
+          queueApply();
+        };
+
+        handlers.error = function(channel, error) {
+
+        };
+
+        $scope.$apply();
+      }
 
       $scope.transfers = [];
       $scope.file = host.file;
