@@ -217,8 +217,7 @@ if (navigator.webkitGetUserMedia) {
 
       rtc.on('your_id', function(data) {
         if (room == null) {
-          room = data;
-          sendEvent(rtc._socket, 'join_room', {room: room});
+          rtc.joinRoom(data);
         }
       });
 
@@ -227,7 +226,7 @@ if (navigator.webkitGetUserMedia) {
   };
 
   rtc.joinRoom = function(room) {
-
+    sendEvent(rtc._socket, 'join_room', {room: room});
   };
 
   rtc.leaveRoom = function(room) {
@@ -408,9 +407,7 @@ if (navigator.webkitGetUserMedia) {
 
   rtc.createDataChannel = function(pcOrId, label) {
     if (!rtc.dataChannelSupport) {
-      //TODO this should be an exception
-      alert('webRTC data channel is not yet supported in this browser,' +
-        ' or you must turn on experimental flags');
+      rtc.fire('info data_channel_not_supported');
       return;
     }
 

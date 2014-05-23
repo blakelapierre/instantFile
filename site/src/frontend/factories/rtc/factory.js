@@ -1,6 +1,7 @@
 var webRTC = require('webrtc.io');
 
 module.exports = ['$location', function($location) {
+
   function launchCommandCenter(room, callback) {
     console.log(room);
 
