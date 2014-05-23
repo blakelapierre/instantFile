@@ -1,3 +1,5 @@
+Live Server: https://instafile.io
+
 To Run:
 ```
     cd site
@@ -26,8 +28,3 @@ A job may be staffed by one or more persons. All jobs offer equal equity stake i
 
 
 Apply yourself.
-
-
-
-
-Live dev/test server: http://facerace.in:2777
