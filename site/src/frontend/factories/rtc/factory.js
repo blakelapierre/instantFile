@@ -1,114 +1,348 @@
-var webRTC = require('webrtc.io');
+// Coordinates your peers. Sets up connections, streams, and channels.
 
-module.exports = ['$location', function($location) {
+var _ = require('lodash'),
+    io = require('socket.io');
 
-  function launchCommandCenter(room, callback) {
-    console.log(room);
+var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+var URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+var getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+var RTCIceCandidate = (window.mozRTCIceCandidate || window.RTCIceCandidate);
+var RTCSessionDescription = (window.mozRTCSessionDescription || window.RTCSessionDescription); // order is very important: "RTCSessionDescription" defined in Nighly but useless
 
-    var url = 'wss://' + window.location.host;
+/*
++  Event Handling
+*/
+var events = {};
+function on(event, listener) {
+  if (typeof event == 'object') {
+    for (var eventName in event) on(eventName, event[eventName]);
+    return;
+  }
 
-    // need to handle subsequent calls of this function correctly
-    webRTC.connect(url, room);
+  events[event] = events[event] || [];
+  events[event].push(listener);
+};
 
-    webRTC.on('connections', function() {
-      if (callback) callback(webRTC._me);
-    });
+function off(event, listener) {
+  var listeners = events[event];
+  if (listeners && listeners.length > 0) {
+    for (var i = listeners.length - 1; i >= 0; i++) {
+      if (listeners[i] === listener) {
+        listeners.splice(i, 1);
+      }
+    }
+    if (listeners.length == 0) delete events[event];
+  }
+};
+
+function fire(event) {
+  var listeners = events[event] || [],
+      args = Array.prototype.slice.call(arguments, 1);
+
+  for (var i = 0; i < listeners.length; i++) {
+    listeners[i].apply(null, args);
+  }
+};
+/*
+-  Event Handling
+*/
+
+function hashList() {
+  var list = [],
+      hash = {};
+
+  this.add = function(key, value) {
+    list.push(value);
+    hash[key] = value;
+    self[list.length - 1] = value;
   };
 
-  function requestFile(peerConnectionID, fileName) {
-    var channel = rtc.dataChannels[peerConnectionID];
+  this.removeByKey = function(key) {
+    var value = hash[key];
+    _.remove(list, function(v) { return v == value; });
+    delete hash[key];
+  };
+};
 
-    if (channel) {
-      channel.send(fileName);
+function createPeer(id, emit, fire) {
+  var streams = []
+      streamsHash = {},
+      channels = [],
+      channelsHash = {};
+
+  var peer = {
+    id: id,
+    channels: channels,
+    streams: streams,
+    connect: function() { 
+      peer.peerConnection = createConnection();
+    },
+    createChannel: function(label, options, handlers) {
+      var channel = peer.peerConnection.createDataChannel(label, options);
+
+      attachToChannel(channel, handlers);
+
+      return channel;
     }
   };
 
-  var fileBuffers = {};
-  function getFileBuffer(file, callback) {
-    var buffer = fileBuffers[file];
-    if (buffer) callback(buffer);
-    else {
-      var reader = new FileReader();
+  function createConnection() {
+    var connection = new RTCPeerConnection({
+      iceServers: [{url: 'stun:stun.l.google.com:19302'}]
+    });
+    
+    connection.onnegotiationneeded = function() {
+      sendOffer();
+    };
+
+    connection.onicecandidate = function(event) {
+      var candidate = event.candidate;
+
+      if (candidate) {
+        emit('ice_candidate', {
+          peerID: id,
+          label: candidate.sdpMLineIndex,
+          candidate: candidate.candidate
+        });
+
+        fire('peer ice_candidate', peer, candidate);
+      }
+    };
+
+    connection.onsignalingstatechange = function(event) {
+      console.log(event);
+      fire('peer signaling_state_change', peer, event);
+    };
+
+    connection.onaddstream = function() {
+      fire('peer add_')
+    };
+
+    connection.onremovestream = function() {
+
+    };
+
+    connection.oniceconnectionstatechange = function() {
+
+    };
+
+    connection.ondatachannel = function(event) {
+      var channel = event.channel;
       
-      reader.onload = function(e) {
-        var buffer = e.target.result;
-
-        fileBuffers[file] = buffer;
-        callback(buffer);
+      // Override these functions when you get passed 'handlers'
+      var handlers = {
+        open: function() {},
+        close: function() {},
+        message: function(message) {console.log(message);},
+        error: function(error) {}
       };
 
-      reader.readAsArrayBuffer(file);
-    }
+      attachToChannel(channel, handlers);
+
+      fire('peer data_channel connected', peer, channel, handlers);
+    };
+
+    return connection;
   };
 
-  function sendFile(channel, file, progress) {
-    var chunkSize = 64 * 1024,
-        reader = new FileReader(),
-        stats = {};
+  function attachToChannel(channel, handlers) {
+    var label = channel.label;
 
-    getFileBuffer(file, function(buffer) {
-      channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
+    function call(name, arg1, arg2) {
+      (handlers[name] || function () {})(arg1, arg2);
+    };
 
-      var offset = 0,
-          backoff = 0,
-          iterations = 1,
-          startTime = new Date().getTime();
+    channel.onopen = function() {
+      call('open', channel);
+      fire('peer data_channel open', peer, channel);
+    };
 
-      stats.startTime = startTime;
-      stats.transferred = 0;
-      stats.total = buffer.byteLength;
-      stats.speed = 0;
+    channel.onclose = function() {
+      _.remove(channels, function(c) { return c.label === label; });
+      delete channels[label];
 
-      console.log(channel);
+      call('close', channel);
+      fire('peer data_channel close', peer, channel);
+    };
 
-      function sendChunk() {
-        if (channel.readyState != 'open') return;
+    channel.onmessage = function(message) {
+      call('message', channel, message.data);
+      fire('peer data_channel message', peer, channel, message);
+    };
 
-        for (var i = 0; i < iterations; i++) {
-          var now = new Date().getTime(),
-              size = Math.min(chunkSize, buffer.byteLength - offset),
-              chunk = buffer.slice(offset, offset + size);
+    channel.onerror = function(error) {
+      call('error', channel, error);
+      fire('peer data_channel error', peer, channel, error);
+    };
 
-          try {
-            channel.send(chunk);
+    channels.push(channel);
+    channelsHash[label] = channel;
 
-            offset += size;
-            backoff = 0;
+    return channel;
+  };
 
-            stats.transferred = offset;
-            stats.speed = offset / (now - startTime) * 1000;  
-            stats.progress = stats.transferred / stats.total;
-            stats.backoff = backoff;
+  function sendOffer() {
+    var connection = peer.peerConnection;
 
-            if (iterations < 10) iterations++;
-          } catch(e) {
-            backoff += 100;
-            stats.backoff = backoff;
-            
-            if (iterations > 1) iterations--;
-            break; // get me out of this for loop!
-          }
-          if (stats.progress >= 1) {
-            progress(stats)
-            return;
-          }
-        }
+    connection.createOffer(function(offer) {
+      connection.setLocalDescription(offer, function() {
+        emit('peer offer', {
+          peerID: id,
+          offer: connection.localDescription
+        });
+        fire('peer send offer', peer, offer);
+      }, function(err) {
+        fire('peer error set_local_description', peer, err, offer);
+      });
+    }, function(err) {
+      fire('peer error create offer', peer, err)
+    })
+  };
 
-        if (progress) progress(stats);
+  return peer;
+};
 
-        if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
-      };
+/*
++  Signalling
+*/
+function connectToSignal(server, onReady) {
+  var socket = io.connect(server);
 
-      sendChunk();
+  function emit(event, data) { console.log('emitting', event, data); socket.emit(event, data); };
+
+  socket.on('your_id', function(myID) {
+    var peers = [],
+        peersHash = {};
+
+    signal.myID = myID;
+
+    function getPeer(id) {
+      return peersHash[id];
+    };
+
+    function addPeer(id) {
+      var peer = createPeer(id, emit, fire);
+      peers.push(peer);
+      peersHash[id] = peer;
+      
+      fire('peer added', peer);
+    };
+
+    function removePeerByID(id) {
+      var peer = getPeer(id);
+      if (peer.peerConnection) peer.peerConnection.close();
+      _.remove(peers, function(peer) { return peer.id === id; });
+      delete peersHash[id];
+      fire('peer removed', peer);
+    };
+
+    function addIceCandidate(peerID, candidate) {
+      var peer = getPeer(peerID),
+          connection = peer.peerConnection;
+
+      connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
+        fire('peer ice_candidate', peer, candidate);
+      }, function(err) {
+        fire('peer error ice_candidate', peer, err, candidate);
+      });
+    };
+
+    function receiveAnswer(peerID, answer) {
+      var peer = getPeer(peerID),
+          connection = peer.peerConnection;
+
+      connection.setRemoteDescription(new RTCSessionDescription(answer));
+      fire('peer receive answer', peer, answer);
+    };
+
+    function sendAnswer(peerID, offer) {
+      var peer = getPeer(peerID),
+          connection = peer.peerConnection;
+
+      if (connection == null) {
+        peer.connect();
+        connection = peer.peerConnection;
+      }      
+      
+      connection.setRemoteDescription(new RTCSessionDescription(offer), function() {
+        connection.createAnswer(function(answer) {
+          connection.setLocalDescription(answer, function() {
+            emit('peer answer', {
+              peerID: peerID,
+              answer: answer
+            });
+            fire('peer send answer', peer, answer);
+          }, function(err) {
+            fire('peer error set_local_description', peer, err, answer);
+          });
+        }, function(err) {
+          fire('peer error send answer', peer, err, offer);
+        });
+      }, function(err) {
+        fire('peer error set_remote_description', peer, err, offer);
+      });
+      fire('peer receive offer', peer, offer);
+    };
+
+    socket.on('peer list', function(data) {
+      _.each(data.peerIDs, addPeer);
     });
 
-    return stats;
+    socket.on('peer join', function(id) {
+      addPeer(id);
+    });
+
+    socket.on('peer leave', function(id) {
+      removePeerByID(id);
+    });
+
+    socket.on('peer ice_candidate', function(data) {
+      addIceCandidate(data.peerID, data);
+    });
+
+    socket.on('peer offer', function(data) {
+      sendAnswer(data.peerID, data.offer);
+    });
+
+    socket.on('peer answer', function(data) {
+      receiveAnswer(data.peerID, data.answer);
+    });
+
+    fire('ready', myID);
+  });
+
+  socket.on('close', function() {
+
+  });
+
+  function joinRoom(roomName) {
+    emit('room join', roomName);
   };
+
+  function leaveRoom(roomName) {
+    emit('room leave', roomName);
+  };
+
+  var signal = {
+    on: on,
+    off: off,
+    joinRoom: joinRoom,
+    leaveRoom: leaveRoom
+  };
+
+  return signal;
+};
+/*
+-  Signalling
+*/
+
+module.exports = function() {
+  var signal;
 
   return {
-    launchCommandCenter: launchCommandCenter,
-    requestFile: requestFile,
-    sendFile: sendFile,
-    roomManager: webRTC
-  }
-}];
+    connectToSignal: function(server) {
+      if (signal == null) signal = connectToSignal(server);
+      return signal;
+    }
+  };
+};

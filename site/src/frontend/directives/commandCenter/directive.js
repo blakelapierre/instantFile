@@ -4,28 +4,31 @@ module.exports = function commandCenterDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    controller: ['$scope', '$location', 'host', 'rtc', 'rtc2', function($scope, $location, host, rtc, rtc2) {
+    controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       var room = $location.path().substr(1),
           roomManager = {},
-          signal = rtc2.connectToSignal('//' + window.location.host);
+          signal = rtc.connectToSignal('//' + window.location.host);
 
       $scope.peers = [];
 
       signal.joinRoom(room);
 
       var fileServeHandlers = (function() {
+        var stats;
         return {
           open: function(channel) {
             channel.send('test');
           },
-          close: function(channel) {},
+          close: function(channel) {
+            _.remove($scope.transfers, function(s) { return s == stats; });
+            $scope.$apply();
+          },
           message: function(channel, message) {
-            console.log('message', message);
             if (message == room) {
-              console.log('got file request');
-              rtc.sendFile(channel, host.file, function(stats) {
-                console.log(stats);
+              stats = sendFile(channel, host.file, function(stats) {
+                $scope.$apply();
               });
+              $scope.transfers.push(stats);
             }
           },
           error: function(channel, error) {}
@@ -34,13 +37,13 @@ module.exports = function commandCenterDirective() {
 
       signal.on({
         'peer added': function(peer) {
-          console.log(peer);
           $scope.peers.push(peer);
-          console.log(signal.myID, room);
+
           if (signal.myID == room) {
             peer.connect();
             var channel = peer.createChannel('instafile.io', {}, fileServeHandlers());
           }
+
           $scope.$apply();
         },
         'peer removed': function(peer) {
@@ -157,133 +160,92 @@ module.exports = function commandCenterDirective() {
         };
 
         $scope.$apply();
-      }
+      };
+
+      var fileBuffers = {};
+      function getFileBuffer(file, callback) {
+        var buffer = fileBuffers[file];
+        if (buffer) callback(buffer);
+        else {
+          var reader = new FileReader();
+          
+          reader.onload = function(e) {
+            var buffer = e.target.result;
+
+            fileBuffers[file] = buffer;
+            callback(buffer);
+          };
+
+          reader.readAsArrayBuffer(file);
+        }
+      };
+
+      function sendFile(channel, file, progress) {
+        var chunkSize = 64 * 1024,
+            reader = new FileReader(),
+            stats = {};
+
+        getFileBuffer(file, function(buffer) {
+          channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
+
+          var offset = 0,
+              backoff = 0,
+              iterations = 1,
+              startTime = new Date().getTime();
+
+          stats.startTime = startTime;
+          stats.transferred = 0;
+          stats.total = buffer.byteLength;
+          stats.speed = 0;
+
+          console.log(channel);
+
+          function sendChunk() {
+            if (channel.readyState != 'open') return;
+
+            for (var i = 0; i < iterations; i++) {
+              var now = new Date().getTime(),
+                  size = Math.min(chunkSize, buffer.byteLength - offset),
+                  chunk = buffer.slice(offset, offset + size);
+
+              try {
+                channel.send(chunk);
+
+                offset += size;
+                backoff = 0;
+
+                stats.transferred = offset;
+                stats.speed = offset / (now - startTime) * 1000;  
+                stats.progress = stats.transferred / stats.total;
+                stats.backoff = backoff;
+
+                if (iterations < 10) iterations++;
+              } catch(e) {
+                backoff += 100;
+                stats.backoff = backoff;
+                
+                if (iterations > 1) iterations--;
+                break; // get me out of this for loop!
+              }
+              if (stats.progress >= 1) {
+                progress(stats)
+                return;
+              }
+            }
+
+            if (progress) progress(stats);
+
+            if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
+          };
+
+          sendChunk();
+        });
+
+        return stats;
+      };
 
       $scope.transfers = [];
       $scope.file = host.file;
-
-      if (host.file) {
-
-      }
-      else {
-      }
-
-      // roomManager.on('connections', function(connections) {
-      //   console.log(connections);
-      //   if (connections.length == 0) {
-      //     // $location.path('/');
-      //     // $scope.$apply();
-      //     return;
-      //   }
-      //   $scope.connections = connections;
-      //   roomManager.fire('ready');
-      //   $scope.$apply();
-      // });
-
-      // roomManager.on('new connection', function(data) {
-      //   console.log('new connection');
-      //   $scope.connections = roomManager.connections;
-      //   console.log($scope.connections);
-      //   $scope.$apply();
-      // });
-
-      // roomManager.on('disconnect stream', function(data) {
-      //   console.log('disconnected', data);
-      //   $scope.$apply();
-      // });
-
-      // var channelManager = {};
-      // if (host.file) {
-      //   roomManager.on('data stream data', function(connection, channel, message) {
-      //     if (message == room) {
-      //       var transfer = rtc.sendFile(channel, host.file, function(stats) {
-      //         $scope.$apply(); // throttle this
-      //       });
-            
-      //       transfer.id = channel.id;
-
-      //       $scope.transfers.push(transfer);
-      //     }
-      //   });
-
-      //   roomManager.on('data stream close', function(channel) {
-      //     console.log('close', channel);
-      //     _.remove($scope.transfers, function(transfer) {
-      //       return transfer.id === channel.id;
-      //     });
-      //   });
-      // }
-      // else {
-      //   signal.joinRoom(room);
-
-      //   roomManager.on('data stream open', function(channel) {
-      //     console.log('open', channel);
-      //     channel.send(room);
-      //   });
-
-      //   var queueApply = _.throttle(function() {
-      //     $scope.$apply();
-      //   }, 100);
-
-      //   roomManager.on('data stream data', function(connection, channel, message) {
-      //     var incoming = channelManager[connection];
-      //     if (incoming) {
-      //       var now = new Date().getTime(),
-      //           stats = incoming.stats;
-
-      //       incoming.buffers.push(message);
-
-      //       incoming.position += message.byteLength || message.size; // Firefox uses 'size'
-
-      //       stats.transferred = incoming.position;
-      //       stats.total = incoming.byteLength;
-      //       stats.progress = stats.transferred / stats.total;
-      //       stats.speed = incoming.position / (now - incoming.start) * 1000;
-      
-      //       if (incoming.position == incoming.byteLength) {
-      //         var blob = new Blob(incoming.buffers, {type: incoming.type});
-
-      //         $scope.file = blob;
-
-      //         var a = document.createElement('a');
-      //         document.body.appendChild(a); // Firefox apparently needs this
-      //         a.href = window.URL.createObjectURL(blob);
-      //         a.download = incoming.name;
-      //         a.click();
-      //         a.remove();
-      //       }
-      //     }
-      //     else {
-      //       var parts = message.toString().split(';'),
-      //           byteLength = parseInt(parts[0]),
-      //           name = parts[1],
-      //           type = parts[2];
-
-      //       if (parts.length == 3) {
-
-      //         var stats = {
-      //           transferred: 0,
-      //           total: byteLength,
-      //           speed: 0
-      //         };
-
-      //         $scope.transfers.push(stats);
-
-      //         channelManager[connection] = {
-      //           byteLength: byteLength,
-      //           name: name,
-      //           type: type,
-      //           stats: stats,
-      //           position: 0,
-      //           buffers: [],
-      //           start: new Date().getTime()
-      //         };
-      //       }
-      //     }
-
-      //     queueApply();
-      //   });
-      // }
     }]
   };
 };

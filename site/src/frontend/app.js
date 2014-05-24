@@ -15,7 +15,6 @@ module.exports = angular.module('instantFile', ['ngRoute'])
 
   .factory('host',  require('./factories/host/factory'))
   .factory('rtc',   require('./factories/rtc/factory'))
-  .factory('rtc2',  require('./factories/rtc/factory2'))
 
   .config(function($routeProvider, $compileProvider) {
     $routeProvider

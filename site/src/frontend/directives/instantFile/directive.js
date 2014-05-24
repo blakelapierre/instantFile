@@ -2,7 +2,7 @@ module.exports = function instantFileDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
-    controller: ['$scope', '$location', 'host', 'rtc2', function($scope, $location, host, rtc2) {
+    controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       $scope.activateInstantFile = function() {
         var path = $location.path();
         if (path == '/' || path == '') $scope.promptForFile();
@@ -29,7 +29,7 @@ module.exports = function instantFileDirective() {
       });
 
       function launchCommandCenter() {
-        var signal = rtc2.connectToSignal('//' + window.location.host);
+        var signal = rtc.connectToSignal('//' + window.location.host);
         signal.on('ready', function(handle) {
           console.log('ready');
           $location.path(handle);
