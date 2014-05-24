@@ -48,46 +48,27 @@ function fire(event) {
 -  Event Handling
 */
 
-function hashList() {
-  var list = [],
-      hash = {};
-
-  this.add = function(key, value) {
-    list.push(value);
-    hash[key] = value;
-    self[list.length - 1] = value;
-  };
-
-  this.removeByKey = function(key) {
-    var value = hash[key];
-    _.remove(list, function(v) { return v == value; });
-    delete hash[key];
-  };
-};
-
 function createPeer(id, emit, fire) {
-  var streams = []
-      streamsHash = {},
-      channels = [],
-      channelsHash = {};
+  var streams = [],
+      channels = [];
 
   var peer = {
     id: id,
     channels: channels,
     streams: streams,
     connect: function() { 
-      peer.peerConnection = createConnection();
+      peer.peerConnection = createConnection(channels);
     },
     createChannel: function(label, options, handlers) {
       var channel = peer.peerConnection.createDataChannel(label, options);
 
-      attachToChannel(channel, handlers);
+      attachToChannel(channels, channel, handlers);
 
       return channel;
     }
   };
 
-  function createConnection() {
+  function createConnection(channels) {
     var connection = new RTCPeerConnection({
       iceServers: [{url: 'stun:stun.l.google.com:19302'}]
     });
@@ -138,7 +119,7 @@ function createPeer(id, emit, fire) {
         error: function(error) {}
       };
 
-      attachToChannel(channel, handlers);
+      attachToChannel(channels, channel, handlers);
 
       fire('peer data_channel connected', peer, channel, handlers);
     };
@@ -146,7 +127,7 @@ function createPeer(id, emit, fire) {
     return connection;
   };
 
-  function attachToChannel(channel, handlers) {
+  function attachToChannel(channels, channel, handlers) {
     var label = channel.label;
 
     function call(name, arg1, arg2) {
@@ -177,7 +158,7 @@ function createPeer(id, emit, fire) {
     };
 
     channels.push(channel);
-    channelsHash[label] = channel;
+    channels[label] = channel;
 
     return channel;
   };
