@@ -1,4 +1,5 @@
 // Coordinates your peers. Sets up connections, streams, and channels.
+// Based on webrtc.io
 
 var _ = require('lodash'),
     io = require('socket.io');
