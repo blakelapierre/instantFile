@@ -3,28 +3,82 @@
 var _ = require('lodash'),
     uuid = require('node-uuid');
 
+function HashList(idProperty) {
+  var list = [],
+      hash = {};
+
+  if (idProperty) {
+    this.push = function(obj) {
+      list.push(obj);
+      hash[obj[idProperty]] = {
+        id: obj[idProperty],
+        index: list.length - 1,
+        obj: obj
+      };
+    };
+  }
+  else {
+    this.push = function(id, obj) {
+      list.push(obj);
+      hash[id] = {
+        id: id,
+        index: list.length - 1,
+        obj: obj
+      };
+    };
+  }
+
+  this.removeObject = function(obj) {
+    var hObj = hash[obj.id];
+
+    list.splice(hObj.index, 1);
+    delete hash[obj.id];
+  };
+
+  this.removeByID = function(id) {
+    var hObj = hash[id];
+
+    list.splice(hObj.index, 1);
+    delete hash[id];
+  };
+
+  this.length = function() {
+    return list.length;
+  };
+
+  this.getByID = function(id) {
+    var record = hash[id];
+    return record ? record.obj : null;
+  };
+
+  this.asList = function() {
+    return list;
+  };
+
+  this.asHash = function() {
+    return hash;
+  };
+};
+
 module.exports = function(io) {
-  var rooms = {},
-      sockets = {},
-      roomCount = 0,
-      socketCount = 0;
+  var rooms = new HashList(),
+      sockets = new HashList('id');
 
 
   function joinRoom(socket, roomName) {
-    var room = rooms[roomName];
-console.log(socket.id, 'join', roomName);
+    var room = rooms.getByID(roomName);
+
     if (room == null) {
-      room = [];
-      roomCount++;
-      rooms[roomName] = room;  
+      room = new HashList('id');
+      rooms.push(roomName, room);
     }
 
-    _.each(room, function(peerSocket) {
+    _.each(room.asList(), function(peerSocket) {
       peerSocket.emit('peer join', socket.id);
     });
 
     socket.emit('peer list', {
-      peerIDs: _.pluck(room, 'id')
+      peerIDs: _.pluck(room.asList(), 'id')
     });
 
     room.push(socket);
@@ -33,34 +87,32 @@ console.log(socket.id, 'join', roomName);
   };
 
   function leaveRoom(socket, roomName) {
-    var room = rooms[roomName] || [];
+    var room = rooms.getByID(roomName) || [];
 
-    _.remove(room, function(s) { return s == socket; });
+    room.removeObject(socket);
 
     _.remove(socket.rooms, function(r) { return r === roomName; });
 
-    _.each(room, function(peerSocket) {
+    _.each(room.asList(), function(peerSocket) {
+      console.log(peerSocket);
       peerSocket.emit('peer leave', socket.id);
     })
 
-    if (room.length == 0) delete rooms[roomName];
+    if (room.length == 0) rooms.removeByID(roomName);
   };
 
   io.set('log level', 0);
 
   io.sockets.on('connection', function(socket) {
-    socketCount++; 
-    
     //socket.peerID = uuid.v4();
     socket.emit('your_id', socket.id);
-    console.log('new connection', socket.id);
 
     socket.rooms = [];
 
-    sockets[socket.id] = socket;
+    sockets.push(socket);
 
     socket.on('ice_candidate', function(data) {
-      var peerSocket = sockets[data.peerID];
+      var peerSocket = sockets.getByID(data.peerID);
 
       if (peerSocket) {
         peerSocket.emit('peer ice_candidate', {
@@ -72,7 +124,7 @@ console.log(socket.id, 'join', roomName);
     });
 
     socket.on('peer offer', function(data) {
-      var peerSocket = sockets[data.peerID];
+      var peerSocket = sockets.getByID(data.peerID);
 
       if (peerSocket) {
         peerSocket.emit('peer offer', {
@@ -83,7 +135,7 @@ console.log(socket.id, 'join', roomName);
     });
 
     socket.on('peer answer', function(data) {
-      var peerSocket = sockets[data.peerID];
+      var peerSocket = sockets.getByID(data.peerID);
 
       if (peerSocket) {
         peerSocket.emit('peer answer', {
@@ -106,7 +158,12 @@ console.log(socket.id, 'join', roomName);
         leaveRoom(socket, roomName);
       });
 
-      delete sockets[socket.id];
+      sockets.removeObject(socket);
     });
   });
+
+  return {
+    rooms: rooms,
+    sockets: sockets
+  };
 };

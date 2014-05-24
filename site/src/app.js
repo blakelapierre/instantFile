@@ -103,4 +103,4 @@ startServer({
   ca: ca,
   key: key,
   cert: cert
-}, function(webserver, io, rtc) { });
+}, function(webserver, redirectServer, signalServer) { });
