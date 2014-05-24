@@ -5,70 +5,99 @@ module.exports = function commandCenterDirective() {
     restrict: 'E',
     template: require('./template.html'),
     controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
-
       var room = $location.path().substr(1),
-          roomManager = rtc.roomManager;
+          roomManager = {},
+          signal = rtc.connectToSignal('//' + window.location.host);
 
-      $scope.transfers = [];
-      $scope.file = host.file;
+      $scope.peers = [];
 
-      roomManager.on('connections', function(connections) {
-        console.log(connections);
-        if (connections.length == 0) {
-          // $location.path('/');
-          // $scope.$apply();
-          return;
+      signal.joinRoom(room);
+
+      var fileServeHandlers = (function() {
+        var stats;
+        return {
+          open: function(channel) {
+            channel.send('test');
+          },
+          close: function(channel) {
+            _.remove($scope.transfers, function(s) { return s == stats; });
+            $scope.$apply();
+          },
+          message: function(channel, message) {
+            if (message == room) {
+              stats = sendFile(channel, host.file, function(stats) {
+                $scope.$apply();
+              });
+              $scope.transfers.push(stats);
+            }
+          },
+          error: function(channel, error) {}
         }
-        $scope.connections = connections;
-        roomManager.fire('ready');
-        $scope.$apply();
       });
 
-      roomManager.on('new connection', function(data) {
-        console.log('new connection');
-        $scope.connections = roomManager.connections;
-        console.log($scope.connections);
-        $scope.$apply();
-      });
+      signal.on({
+        'peer added': function(peer) {
+          $scope.peers.push(peer);
 
-      roomManager.on('disconnect stream', function(data) {
-        console.log('disconnected', data);
-        $scope.$apply();
-      });
-
-      var channelManager = {};
-      if (host.file) {
-        roomManager.on('data stream data', function(connection, channel, message) {
-          if (message == room) {
-            var transfer = rtc.sendFile(channel, host.file, function(stats) {
-              $scope.$apply(); // throttle this
-            });
-            
-            transfer.id = channel.id;
-
-            $scope.transfers.push(transfer);
+          if (signal.myID == room) {
+            peer.connect();
+            var channel = peer.createChannel('instafile.io', {}, fileServeHandlers());
           }
-        });
 
-        roomManager.on('data stream close', function(channel) {
-          console.log('close', channel);
-          _.remove($scope.transfers, function(transfer) {
-            return transfer.id === channel.id;
-          });
-        });
-      }
-      else {
-        roomManager.on('data stream open', function(channel) {
-          console.log('open', channel);
-          channel.send(room);
-        });
+          $scope.$apply();
+        },
+        'peer removed': function(peer) {
+          console.log('peer removed');
+          _.remove($scope.peers, function(p) { return p == peer; });
+          $scope.$apply();
+        },
+        'peer ice_candidate': function(peer, candidate) {
+        },
+        'peer receive offer': function(peer, offer) {
+          console.log('peer receive offer', peer, offer);
+        },
+        'peer receive answer': function(peer, answer) {
+          console.log('peer receive answer');
+        },
+        'peer send offer': function(peer, offer) {
+        },
+        'peer send answer': function(peer, offer) {
+          console.log('peer send answer');
+        },
+        'peer signaling_state_change': function(peer, event) {
+          console.log('peer signaling_state_change', arguments);
+        },
+        'peer data_channel connected': function(peer, channel, handlers) {
+          attachChannel(channel, handlers);
+          console.log('peer data_channel connected', peer, channel, handlers);
+        },
+        'peer error send offer': function(peer, error, offer) {
+          console.log('peer error send offer', error);
+        },
+        'peer error send answer': function(peer, error, answer) {
+          console.log('peer error send answer', error);
+        },
+        'peer error set_remote_description': function(peer, error) {
+          console.log('peer error set_remote_description', error);
+        }
+      });
 
+      function attachChannel(channel, handlers) {
         var queueApply = _.throttle(function() {
           $scope.$apply();
-        }, 100);
+        }, 50);
 
-        roomManager.on('data stream data', function(connection, channel, message) {
-          var incoming = channelManager[connection];
+        handlers.open = function(channel) {
+          // Request file
+          channel.send(room);
+        };
+
+        handlers.close = function(channel) {
+
+        };
+
+        handlers.message = function(channel, message) {
+          var incoming = channel.transfer;
           if (incoming) {
             var now = new Date().getTime(),
                 stats = incoming.stats;
@@ -111,7 +140,7 @@ module.exports = function commandCenterDirective() {
 
               $scope.transfers.push(stats);
 
-              channelManager[connection] = {
+              channel.transfer = {
                 byteLength: byteLength,
                 name: name,
                 type: type,
@@ -124,13 +153,99 @@ module.exports = function commandCenterDirective() {
           }
 
           queueApply();
+        };
+
+        handlers.error = function(channel, error) {
+
+        };
+
+        $scope.$apply();
+      };
+
+      var fileBuffers = {};
+      function getFileBuffer(file, callback) {
+        var buffer = fileBuffers[file];
+        if (buffer) callback(buffer);
+        else {
+          var reader = new FileReader();
+          
+          reader.onload = function(e) {
+            var buffer = e.target.result;
+
+            fileBuffers[file] = buffer;
+            callback(buffer);
+          };
+
+          reader.readAsArrayBuffer(file);
+        }
+      };
+
+      function sendFile(channel, file, progress) {
+        var chunkSize = 64 * 1024,
+            reader = new FileReader(),
+            stats = {};
+
+        getFileBuffer(file, function(buffer) {
+          channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
+
+          var offset = 0,
+              backoff = 0,
+              iterations = 1,
+              startTime = new Date().getTime();
+
+          stats.startTime = startTime;
+          stats.transferred = 0;
+          stats.total = buffer.byteLength;
+          stats.speed = 0;
+
+          console.log(channel);
+
+          function sendChunk() {
+            if (channel.readyState != 'open') return;
+
+            for (var i = 0; i < iterations; i++) {
+              var now = new Date().getTime(),
+                  size = Math.min(chunkSize, buffer.byteLength - offset),
+                  chunk = buffer.slice(offset, offset + size);
+
+              try {
+                channel.send(chunk);
+
+                offset += size;
+                backoff = 0;
+
+                stats.transferred = offset;
+                stats.speed = offset / (now - startTime) * 1000;  
+                stats.progress = stats.transferred / stats.total;
+                stats.backoff = backoff;
+
+                if (iterations < 10) iterations++;
+              } catch(e) {
+                backoff += 100;
+                stats.backoff = backoff;
+                
+                if (iterations > 1) iterations--;
+                break; // get me out of this for loop!
+              }
+              if (stats.progress >= 1) {
+                progress(stats)
+                return;
+              }
+            }
+
+            if (progress) progress(stats);
+
+            if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
+          };
+
+          sendChunk();
         });
 
-        rtc.launchCommandCenter(room, function(handle) {
-          console.log('connected, your handle', handle, rtc);
-          rtc.requestFile(room, room);
-        });
-      }
+        return stats;
+      };
+
+      $scope.transfers = [];
+      $scope.file = host.file;
     }]
   };
 };

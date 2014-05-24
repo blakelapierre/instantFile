@@ -6,7 +6,8 @@ module.exports = function() {
       file: '=',
       transfers: '=',
       connections: '=',
-      sendStats: '='
+      sendStats: '=',
+      peers: '='
     },
     controller: ['$scope', 'host', function($scope, host) {
       if (host.file) {
@@ -19,8 +20,9 @@ module.exports = function() {
         if (sendStats) $scope.showSendStats = true;
       });
 
-      $scope.$watchCollection('connections', function(connections) {
-        $scope.hasConnections = connections && connections.length > 0;
+      $scope.$watchCollection('peers', function(peers) {
+        console.log('*********peers', peers);
+        $scope.hasPeers = peers && peers.length > 0;
       });
     }]
   };

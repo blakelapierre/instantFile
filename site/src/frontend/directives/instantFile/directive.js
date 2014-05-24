@@ -29,11 +29,14 @@ module.exports = function instantFileDirective() {
       });
 
       function launchCommandCenter() {
-        rtc.launchCommandCenter(null, function(handle) {
+        var signal = rtc.connectToSignal('//' + window.location.host);
+        signal.on('ready', function(handle) {
+          console.log('ready');
           $location.path(handle);
           $scope.$digest();
         });
-      }
+      
+      };
     }]
   };
 };

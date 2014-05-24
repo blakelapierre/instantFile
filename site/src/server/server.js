@@ -4,6 +4,8 @@ module.exports = function(config, callback) {
       path = require('path'),
       express = require('express'),
       webRTC = require('./lib/webrtc.io'),
+      socketIO = require('socket.io'),
+      signal = require('./signal'),
       app = express();
 
   var redirectServer = http.createServer(function requireHTTPS(req, res, next) {
@@ -24,8 +26,9 @@ module.exports = function(config, callback) {
         cert: config.cert
       },
       webserver = https.createServer(sslOptions, app),
-      rtcManager = webRTC.listen(webserver);
-
+      //rtcManager = webRTC.listen(webserver),
+      io = socketIO.listen(webserver);
+var rtcManager = {};
   var router = express.Router();
 
   router.get('/stats', function(req, res) {
@@ -43,6 +46,8 @@ module.exports = function(config, callback) {
   });
 
   app.use('/', router);
+
+  signal(io);
 
   webserver.listen(config.port);
   redirectServer.listen(config.httpPort);
