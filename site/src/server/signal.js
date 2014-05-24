@@ -3,11 +3,23 @@
 var _ = require('lodash'),
     uuid = require('node-uuid');
 
+// A HashList stores data in both an array, and a dictionary/hashmap
+// We do this 
 function HashList(idProperty) {
   var list = [],
       hash = {};
 
-  if (idProperty) {
+  if (idProperty == '_self') {
+    this.push = function(obj) {
+      list.push(obj);
+      hash[obj] = {
+        id: obj,
+        index: list.length - 1,
+        obj: obj
+      }
+    };
+  }
+  else if (idProperty) {
     this.push = function(obj) {
       list.push(obj);
       hash[obj[idProperty]] = {
@@ -58,6 +70,12 @@ function HashList(idProperty) {
   this.asHash = function() {
     return hash;
   };
+
+  this.forEach = function(fn) {
+    for (var i = 0; i < list.length; i++) {
+      fn(list[i]);
+    }
+  }
 };
 
 module.exports = function(io) {
@@ -73,7 +91,7 @@ module.exports = function(io) {
       rooms.push(roomName, room);
     }
 
-    _.each(room.asList(), function(peerSocket) {
+    room.forEach(function(peerSocket) {
       peerSocket.emit('peer join', socket.id);
     });
 
@@ -89,14 +107,18 @@ module.exports = function(io) {
   function leaveRoom(socket, roomName) {
     var room = rooms.getByID(roomName) || [];
 
+    if (room == null) {
+      console.log('Tried to leave non-existant room', roomName);
+      return;
+    }
+
     room.removeObject(socket);
 
-    _.remove(socket.rooms, function(r) { return r === roomName; });
+    socket.rooms.removeByID(roomName);
 
-    _.each(room.asList(), function(peerSocket) {
-      console.log(peerSocket);
+    room.forEach(function(peerSocket) {
       peerSocket.emit('peer leave', socket.id);
-    })
+    });
 
     if (room.length == 0) rooms.removeByID(roomName);
   };
@@ -107,7 +129,7 @@ module.exports = function(io) {
     //socket.peerID = uuid.v4();
     socket.emit('your_id', socket.id);
 
-    socket.rooms = [];
+    socket.rooms = new HashList('_self');
 
     sockets.push(socket);
 
@@ -154,7 +176,7 @@ module.exports = function(io) {
     });
 
     socket.on('disconnect', function() {
-      _.each(socket.rooms, function(roomName) {
+      socket.rooms.forEach(function(roomName) {
         leaveRoom(socket, roomName);
       });
 
