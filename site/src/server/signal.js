@@ -108,7 +108,7 @@ module.exports = function(io) {
     var room = rooms.getByID(roomName) || [];
 
     if (room == null) {
-      console.log('Tried to leave non-existant room', roomName);
+      console.log('Tried to leave non-existent room', roomName);
       return;
     }
 
@@ -152,7 +152,7 @@ module.exports = function(io) {
         peerSocket.emit('peer offer', {
           offer: data.offer,
           peerID: socket.id
-        })
+        });
       }
     });
 
