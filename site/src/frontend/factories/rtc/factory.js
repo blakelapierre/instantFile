@@ -25,6 +25,11 @@ function on(event, listener) {
 };
 
 function off(event, listener) {
+  if (typeof event == 'object') {
+    for (var eventName in event) off(eventName, event[eventName]);
+    return;
+  }
+
   var listeners = events[event];
   if (listeners && listeners.length > 0) {
     for (var i = listeners.length - 1; i >= 0; i++) {
@@ -105,8 +110,8 @@ function createPeer(id, emit, fire) {
 
     };
 
-    connection.oniceconnectionstatechange = function() {
-
+    connection.oniceconnectionstatechange = function(event) {
+      fire('peer ice_connection_state_change', peer, event);
     };
 
     connection.ondatachannel = function(event) {

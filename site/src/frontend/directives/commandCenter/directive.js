@@ -9,23 +9,13 @@ module.exports = function commandCenterDirective() {
           roomManager = {},
           signal = rtc.connectToSignal('//' + window.location.host);
 
-      $scope.blastDoorsOpen = false;
+      $scope.blastDoorsOpen = host.file != null;
 
       $scope.blastDoorMessages = [
-        'Establishing Real-Time Encrypted Peer-to-Peer Session'
+        'Welcome to instaFile.io',
+        'Encrypted Peer-to-Peer File Sharing',
+        'Brought to you by WebRTC'
       ];
-
-      setTimeout(function() {
-        $scope.blastDoorMessages.push('Received ICE Candidate');
-        $scope.$apply();
-      }, 500);
-
-      setTimeout(function() {
-        $scope.blastDoorMessages.push('Connection Established');
-        $scope.blastDoorsOpen = true;
-        $scope.expandCommandCenter = true;
-        $scope.$apply();
-      }, 1500);
 
       $scope.peers = [];
 
@@ -53,6 +43,55 @@ module.exports = function commandCenterDirective() {
         }
       });
 
+      if (host.file == null) {
+        (function attachBlastDoor() {
+          var handlers = {
+            'peer ice_candidate': function(peer, candidate) {
+              if (peer.id == room) {
+                //$scope.blastDoorMessages.push('ICE Candidate Received');
+              }
+              $scope.$apply();
+            },
+            'peer receive offer': function(peer, offer) {
+              if (peer.id == room) {
+                $scope.blastDoorMessages.push('Offer Received');
+              }
+              $scope.$apply();
+            },
+            'peer receive answer': function(peer, answer) {
+              if (peer.id == room) {
+                $scope.blastDoorMessages.push('Answer Received');
+              }
+              $scope.$apply();
+            },
+            'peer send answer': function(peer, offer) {
+              if (peer.id == room) {
+                $scope.blastDoorMessages.push('Answer Sent');
+              }
+              $scope.$apply();
+            },
+            'peer signaling_state_change': function(peer, event) {
+              if (peer.id == room) {
+                var connection = peer.peerConnection;
+                $scope.blastDoorMessages.push('Signalling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
+              }
+              $scope.$apply();
+            },
+            'peer ice_connection_state_change': function(peer, event) {
+              if (peer.id == room) {
+                var state = peer.peerConnection.iceConnectionState;
+                $scope.blastDoorMessages.push('ICE: ' + state);
+                if (state == 'connected') {
+                  $scope.blastDoorsOpen = true;
+                }
+              }
+              $scope.$apply();
+            }
+          };
+          signal.on(handlers);
+        })();
+      }
+
       signal.on({
         'peer added': function(peer) {
           $scope.peers.push(peer);
@@ -60,6 +99,10 @@ module.exports = function commandCenterDirective() {
           if (signal.myID == room) {
             peer.connect();
             var channel = peer.createChannel('instafile.io', {}, fileServeHandlers());
+          }
+
+          if (peer.id == room) {
+            $scope.blastDoorMessages.push('Peer Alive.........Connecting');
           }
 
           $scope.$apply();
@@ -70,10 +113,12 @@ module.exports = function commandCenterDirective() {
           $scope.$apply();
         },
         'peer ice_candidate': function(peer, candidate) {
+          console.log('peer ice_candidate', peer, candidate);
         },
         'peer receive offer': function(peer, offer) {
-          peer.status = 'Received Offer';
           console.log('peer receive offer', peer, offer);
+          peer.status = 'Received Offer';
+          $scope.$apply();
         },
         'peer receive answer': function(peer, answer) {
           console.log('peer receive answer');
@@ -224,6 +269,9 @@ module.exports = function commandCenterDirective() {
           function sendChunk() {
             if (channel.readyState != 'open') return;
 
+            // Is there a better way to do this then to just run some
+            // arbitrary number of iterations each round?
+            // Maybe watch the socket's buffer size?
             for (var i = 0; i < iterations; i++) {
               var now = new Date().getTime(),
                   size = Math.min(chunkSize, buffer.byteLength - offset);

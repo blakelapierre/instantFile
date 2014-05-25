@@ -124,6 +124,7 @@ module.exports = function(io) {
   };
 
   function leaveRoom(socket, roomName) {
+    console.log('leave', socket.id, roomName);
     var room = rooms.getByID(roomName);
 
     if (room == null) {
@@ -195,6 +196,7 @@ module.exports = function(io) {
     });
 
     socket.on('disconnect', function() {
+      console.log('disconnect', socket.id);
       socket.rooms.forEach(function(roomName) {
         leaveRoom(socket, roomName);
       });
