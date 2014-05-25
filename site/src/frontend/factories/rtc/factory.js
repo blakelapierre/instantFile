@@ -274,6 +274,7 @@ function connectToSignal(server, onReady) {
 
     socket.on('peer list', function(data) {
       _.each(data.peerIDs, addPeer);
+      fire('peer list', data.roomName, data.peerIDs);
     });
 
     socket.on('peer join', function(id) {

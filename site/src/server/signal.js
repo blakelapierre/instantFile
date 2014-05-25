@@ -115,6 +115,7 @@ module.exports = function(io) {
     });
 
     socket.emit('peer list', {
+      roomName: roomName,
       peerIDs: _.pluck(room.asList(), 'id')
     });
 
