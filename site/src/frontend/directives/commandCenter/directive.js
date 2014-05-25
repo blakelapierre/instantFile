@@ -226,28 +226,32 @@ module.exports = function commandCenterDirective() {
 
             for (var i = 0; i < iterations; i++) {
               var now = new Date().getTime(),
-                  size = Math.min(chunkSize, buffer.byteLength - offset),
-                  chunk = buffer.slice(offset, offset + size);
+                  size = Math.min(chunkSize, buffer.byteLength - offset);
 
-              try {
-                channel.send(chunk);
+              if (size > 0) {
+                var chunk = buffer.slice(offset, offset + size);
 
-                offset += size;
-                backoff = 0;
+                try {
+                  channel.send(chunk);
 
-                stats.transferred = offset - channel.bufferedAmount;
-                stats.speed = offset / (now - startTime) * 1000;  
-                stats.progress = stats.transferred / stats.total;
-                stats.backoff = backoff;
+                  offset += size;
+                  backoff = 0;
 
-                if (iterations < 10) iterations++;
-              } catch(e) {
-                backoff += 100;
-                stats.backoff = backoff;
-                
-                if (iterations > 1) iterations--;
-                break; // get me out of this for loop!
+                  if (iterations < 10) iterations++;
+                } catch(e) {
+                  backoff += 100;
+                  stats.backoff = backoff;
+                  
+                  if (iterations > 1) iterations--;
+                  break; // get me out of this for loop!
+                }
               }
+
+              stats.transferred = offset - channel.bufferedAmount;
+              stats.speed = offset / (now - startTime) * 1000;  
+              stats.progress = stats.transferred / stats.total;
+              stats.backoff = backoff;
+
               if (stats.progress >= 1) {
                 progress(stats)
                 return;
@@ -256,7 +260,7 @@ module.exports = function commandCenterDirective() {
 
             if (progress) progress(stats);
 
-            if (offset < buffer.byteLength) setTimeout(sendChunk, backoff);
+            if (stats.transferred < buffer.byteLength) setTimeout(sendChunk, backoff);
           };
 
           sendChunk();
