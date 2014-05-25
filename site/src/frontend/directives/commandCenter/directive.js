@@ -14,8 +14,7 @@ module.exports = function commandCenterDirective() {
       $scope.blastDoorMessages = [
         'Welcome to instaFile.io',
         'Encrypted Peer-to-Peer File Sharing',
-        'Brought to you by WebRTC',
-        '*'
+        'Brought to you by WebRTC'
       ];
 
       $scope.peers = [];
@@ -98,7 +97,6 @@ module.exports = function commandCenterDirective() {
           if (signal.myID != room && roomName == room) {
             if (peerIDs.indexOf(room) == -1) {
               $scope.blastDoorMessages.push('Sorry, the host has left.');
-              $scope.blastDoorMessages.push('*');
               $scope.blastDoorMessages.push('Taking you to front page.');
               $scope.blastDoorsOpen = true;
               setTimeout(function() {
