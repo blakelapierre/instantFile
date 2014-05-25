@@ -2,13 +2,6 @@
   <span class="url" select-on-click>{{currentUrl}}</span>
 </div>
 
-<div ng-repeat="transfer in transfers track by $index">
-  {{transfer.transferred}} / {{transfer.total}} {{transfer.speed | number : 0}} B/s 
-  <div class="progress-container">
-    <div class="progress-bar" ng-style="{'width': (transfer.progress * 100) + '%'}"></div>
-  </div>
-</div>
-
 <div ng-show="showSendStats && hasConnections">
   {{sendStats.transferred}} / {{sendStats.total}} {{sendStats.speed | number : 0}} B/s
   <div class="progress-container">
@@ -18,5 +11,5 @@
 
 <div ng-show="hasPeers">
   <h1>Who's Here</h1>
-  <div ng-repeat="peer in peers">{{peer.id}} {{peer.channels.length}}</div>
+  <peer ng-repeat="peer in peers" peer="peer"></peer>
 </div>

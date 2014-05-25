@@ -54,6 +54,7 @@ module.exports = function commandCenterDirective() {
         'peer ice_candidate': function(peer, candidate) {
         },
         'peer receive offer': function(peer, offer) {
+          peer.status = 'Received Offer';
           console.log('peer receive offer', peer, offer);
         },
         'peer receive answer': function(peer, answer) {
@@ -198,6 +199,8 @@ module.exports = function commandCenterDirective() {
           stats.total = buffer.byteLength;
           stats.speed = 0;
 
+          channel.transfer = {stats: stats}; // A workaround for now, do we really want this?
+
           console.log(channel);
 
           function sendChunk() {
@@ -214,7 +217,7 @@ module.exports = function commandCenterDirective() {
                 offset += size;
                 backoff = 0;
 
-                stats.transferred = offset;
+                stats.transferred = offset - channel.bufferedAmount;
                 stats.speed = offset / (now - startTime) * 1000;  
                 stats.progress = stats.transferred / stats.total;
                 stats.backoff = backoff;
