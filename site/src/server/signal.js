@@ -3,6 +3,12 @@
 var _ = require('lodash'),
     uuid = require('node-uuid');
 
+function HashList(idProperty) {
+  _.extend(this.prototype, {
+
+  });
+}
+
 // A HashList stores data in both an array, and a dictionary/hashmap
 // We do this 
 function HashList(idProperty) {
@@ -18,6 +24,22 @@ function HashList(idProperty) {
         obj: obj
       }
     };
+
+    this.removeObject = function(obj) {
+      this.removeByID(obj);
+    };
+
+    this.removeByID = function(id) {
+      var hObj = hash[id];
+
+      list.splice(hObj.index, 1);
+      delete hash[id];
+
+      var length = list.length;
+      for (var i = hObj.index; i < length; i++) {
+        hash[list[i]].index = i;
+      }
+    };
   }
   else if (idProperty) {
     this.push = function(obj) {
@@ -28,31 +50,27 @@ function HashList(idProperty) {
         obj: obj
       };
     };
-  }
-  else {
-    this.push = function(id, obj) {
-      list.push(obj);
-      hash[id] = {
-        id: id,
-        index: list.length - 1,
-        obj: obj
-      };
+
+    this.removeObject = function(obj) {
+      var id = obj[idProperty];
+      this.removeByID(id);
+    };
+
+    this.removeByID = function(id) {
+      var hObj = hash[id];
+
+      list.splice(hObj.index, 1);
+      delete hash[id];
+
+      var length = list.length;
+      for (var i = hObj.index; i < length; i++) {
+        hash[list[i][idProperty]].index = i;
+      }
     };
   }
-
-  this.removeObject = function(obj) {
-    var hObj = hash[obj.id];
-
-    list.splice(hObj.index, 1);
-    delete hash[obj.id];
-  };
-
-  this.removeByID = function(id) {
-    var hObj = hash[id];
-
-    list.splice(hObj.index, 1);
-    delete hash[id];
-  };
+  else {
+    throw Error('You must specify an id. Use "_self" to use the object itself.');
+  }
 
   this.length = function() {
     return list.length;
@@ -79,7 +97,7 @@ function HashList(idProperty) {
 };
 
 module.exports = function(io) {
-  var rooms = new HashList(),
+  var rooms = new HashList('_roomName'),
       sockets = new HashList('id');
 
 
@@ -88,7 +106,8 @@ module.exports = function(io) {
 
     if (room == null) {
       room = new HashList('id');
-      rooms.push(roomName, room);
+      room._roomName = roomName;
+      rooms.push(room);
     }
 
     room.forEach(function(peerSocket) {
@@ -105,7 +124,7 @@ module.exports = function(io) {
   };
 
   function leaveRoom(socket, roomName) {
-    var room = rooms.getByID(roomName) || [];
+    var room = rooms.getByID(roomName);
 
     if (room == null) {
       console.log('Tried to leave non-existent room', roomName);
@@ -120,7 +139,7 @@ module.exports = function(io) {
       peerSocket.emit('peer leave', socket.id);
     });
 
-    if (room.length == 0) rooms.removeByID(roomName);
+    if (room.length() == 0) rooms.removeByID(roomName);
   };
 
   io.set('log level', 0);
