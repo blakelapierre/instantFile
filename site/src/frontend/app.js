@@ -2,6 +2,7 @@ var angular = require('angular');
 
 module.exports = angular.module('instantFile', ['ngRoute'])
   
+  .directive('blastDoors',    require('./directives/blastDoors/directive'))
   .directive('instantFile',   require('./directives/instantFile/directive'))
   .directive('teaser',        require('./directives/teaser/directive'))
   .directive('commandCenter', require('./directives/commandCenter/directive'))

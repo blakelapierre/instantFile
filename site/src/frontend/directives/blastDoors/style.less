@@ -1,32 +1,3 @@
-@keyframes expand-command-center {
-  0% {
-    transform: scale(0.25);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-command-center {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-
-  .container {
-    height: 100%;
-    width: 90%;
-
-    margin: 0 auto;
-
-    &.expand-command-center {
-      animation: expand-command-center 2s 0.5s 1 cubic-bezier(0, 0, 0, 1);
-      animation-fill-mode: both;
-    }
-  }
-}
-
-
-// Blast Doors Stuff
 @keyframes blast-door-up {
   0% {
     top: 0%;
@@ -47,7 +18,7 @@ command-center {
 
 @keyframes message-pop {
   0% {
-    transform: scale(0);
+    transform: scale(0.25);
   }
   100% {
     transform: scale(1);
@@ -63,17 +34,17 @@ command-center {
   }
 }
 
-command-center {
-  // position: fixed;
+blast-doors {
+  position: fixed;
 
-  // top: 0;
-  // left: 0;
+  top: 0;
+  left: 0;
 
-  // height: 100%;
-  // width: 100%;
+  height: 100%;
+  width: 100%;
 
-  // background-color: transparent;
-  // //opacity: 0;
+  background-color: transparent;
+  //opacity: 0;
 
   .door {
     position: absolute;

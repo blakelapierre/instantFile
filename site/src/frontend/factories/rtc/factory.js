@@ -40,6 +40,7 @@ function fire(event) {
   var listeners = events[event] || [],
       args = Array.prototype.slice.call(arguments, 1);
 
+  console.log('Firing', event);
   for (var i = 0; i < listeners.length; i++) {
     listeners[i].apply(null, args);
   }

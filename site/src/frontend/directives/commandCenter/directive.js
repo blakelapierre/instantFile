@@ -9,6 +9,24 @@ module.exports = function commandCenterDirective() {
           roomManager = {},
           signal = rtc.connectToSignal('//' + window.location.host);
 
+      $scope.blastDoorsOpen = false;
+
+      $scope.blastDoorMessages = [
+        'Establishing Real-Time Encrypted Peer-to-Peer Session'
+      ];
+
+      setTimeout(function() {
+        $scope.blastDoorMessages.push('Received ICE Candidate');
+        $scope.$apply();
+      }, 500);
+
+      setTimeout(function() {
+        $scope.blastDoorMessages.push('Connection Established');
+        $scope.blastDoorsOpen = true;
+        $scope.expandCommandCenter = true;
+        $scope.$apply();
+      }, 1500);
+
       $scope.peers = [];
 
       signal.joinRoom(room);
@@ -117,12 +135,12 @@ module.exports = function commandCenterDirective() {
 
               $scope.file = blob;
 
-              var a = document.createElement('a');
-              document.body.appendChild(a); // Firefox apparently needs this
-              a.href = window.URL.createObjectURL(blob);
-              a.download = incoming.name;
-              a.click();
-              a.remove();
+              // var a = document.createElement('a');
+              // document.body.appendChild(a); // Firefox apparently needs this
+              // a.href = window.URL.createObjectURL(blob);
+              // a.download = incoming.name;
+              // a.click();
+              // a.remove();
             }
           }
           else {
