@@ -4,19 +4,28 @@ module.exports = function commandCenterDirective() {
   return {
     restrict: 'E',
     template: require('./template.html'),
+    require: '^instantFile',
+    link: function($scope, element, attributes, instantFile) {
+      $scope.addBlastDoorsMessage = instantFile.addBlastDoorsMessage;
+      $scope.openBlastDoors = instantFile.openBlastDoors;
+      $scope.closeBlastDoors = instantFile.closeBlastDoors;
+
+      $scope.closeBlastDoors();
+    },
     controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       var room = $location.path().substr(1),
           roomManager = {},
           signal = rtc.connectToSignal('//' + window.location.host);
 
-      $scope.blastDoorsOpen = host.file != null;
+      // Take this out!?
+      if (host.file) {
+        setTimeout(function() {
+          $scope.openBlastDoors();
+          $scope.$apply();
+        }, 500);
+      }
 
-      $scope.blastDoorMessages = [
-        'Welcome to instaFile.io',
-        'Encrypted Peer-to-Peer File Sharing',
-        'Brought to you by WebRTC'
-      ];
-
+  
       $scope.peers = [];
 
       signal.joinRoom(room);
@@ -54,35 +63,35 @@ module.exports = function commandCenterDirective() {
             },
             'peer receive offer': function(peer, offer) {
               if (peer.id == room) {
-                $scope.blastDoorMessages.push('Offer Received');
+                $scope.addBlastDoorsMessage('Offer Received');
               }
               $scope.$apply();
             },
             'peer receive answer': function(peer, answer) {
               if (peer.id == room) {
-                $scope.blastDoorMessages.push('Answer Received');
+                $scope.addBlastDoorsMessage('Answer Received');
               }
               $scope.$apply();
             },
             'peer send answer': function(peer, offer) {
               if (peer.id == room) {
-                $scope.blastDoorMessages.push('Answer Sent');
+                $scope.addBlastDoorsMessage('Answer Sent');
               }
               $scope.$apply();
             },
             'peer signaling_state_change': function(peer, event) {
               if (peer.id == room) {
                 var connection = peer.peerConnection;
-                $scope.blastDoorMessages.push('Signalling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
+                $scope.addBlastDoorsMessage('Signalling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
               }
               $scope.$apply();
             },
             'peer ice_connection_state_change': function(peer, event) {
               if (peer.id == room) {
                 var state = peer.peerConnection.iceConnectionState;
-                $scope.blastDoorMessages.push('ICE: ' + state);
+                $scope.addBlastDoorsMessage('ICE: ' + state);
                 if (state == 'connected') {
-                  $scope.blastDoorsOpen = true;
+                  $scope.openBlastDoors();
                 }
               }
               $scope.$apply();
@@ -96,13 +105,10 @@ module.exports = function commandCenterDirective() {
         'peer list': function(roomName, peerIDs) {
           if (signal.myID != room && roomName == room) {
             if (peerIDs.indexOf(room) == -1) {
-              $scope.blastDoorMessages.push('Sorry, the host has left.');
-              $scope.blastDoorMessages.push('Taking you to front page.');
-              $scope.blastDoorsOpen = true;
-              setTimeout(function() {
-                $location.path('/');
-                $scope.$apply();
-              }, 2500);
+              $scope.addBlastDoorsMessage('Sorry, the host has left.');
+              $scope.addBlastDoorsMessage('Taking you to front page.');
+              $scope.openBlastDoors();
+              $location.path('/');
               $scope.$apply();
             }
           }
@@ -116,7 +122,7 @@ module.exports = function commandCenterDirective() {
           }
 
           if (peer.id == room) {
-            $scope.blastDoorMessages.push('Peer Alive.........Connecting');
+            $scope.addBlastDoorsMessage('Peer Alive.........Connecting');
           }
 
           $scope.$apply();
@@ -175,6 +181,15 @@ module.exports = function commandCenterDirective() {
         };
 
         handlers.message = function(channel, message) {
+
+
+/* possible to use with unreliable transport 
+          acknowledgedChunkSeq
+
+          for (var seq = acknowledgedChunkSeq + 1; seq < chunkSeq; seq++) {
+            missingChunks[seq] = seq;
+          }
+*/
           var incoming = channel.transfer;
           if (incoming) {
             var now = new Date().getTime(),
@@ -299,7 +314,7 @@ module.exports = function commandCenterDirective() {
                   offset += size;
                   backoff = 0;
 
-                  if (iterations < 10) iterations++;
+                  if (iterations < 100) iterations++;
                 } catch(e) {
                   backoff += 100;
                   stats.backoff = backoff;

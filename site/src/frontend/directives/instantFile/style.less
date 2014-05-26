@@ -6,6 +6,43 @@
   to { color: #749a02; text-shadow: 0 0 1em #333; }
 }
 
+  // Blast Doors Stuff
+@keyframes blast-door-up {
+  0% {
+    top: 0%;
+  }
+  100% {
+    top: -50%;
+  }
+}
+
+@keyframes blast-door-down {
+  0% {
+    top: 50%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+@keyframes message-pop {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes hide-door {
+  0% {
+    display: block;
+  }
+  100% {
+    display: none;
+  }
+}
+
 instant-file {
   position: fixed;
   width: 100%;
@@ -15,4 +52,83 @@ instant-file {
     width: 100%;
     height: 100%;
   }
+
+  .door {
+    position: absolute;
+
+    left: 0;
+
+    height: 50%;
+    width: 100%;
+
+    text-align: center;
+    font-size: x-large;
+    line-height: 1;
+
+    overflow: hidden;
+
+    text-shadow: 0px 0px 5px #033;
+
+    .table {
+      position: absolute;
+      
+      height: 100%;
+      width: 100%;
+
+      display: table;
+
+      .messages {
+        display: table-cell;
+        vertical-align: middle;
+
+        .message {
+          animation: message-pop 1s 1 cubic-bezier(0, 1, 0, 1);
+          animation-fill-mode: forwards;
+        }
+      }
+    }
+
+    &.upper-door {
+      bottom: 50%;
+
+      background-color: #666;
+
+      .table {
+        bottom: -50%;
+      }
+
+      .messages {
+        width: 100%;
+      }
+
+      &.open-doors {
+        animation: blast-door-up 2s 0.5s 1 ease;
+        animation-fill-mode: forwards;
+      }
+    }
+
+    &.lower-door {
+      top: 50%;
+      background-color: #666;
+
+      .table {
+        top: -50%;
+      }
+
+      .messages {
+        width: 100%;
+      }
+
+      &.open-doors {
+        animation: blast-door-down 2s 0.5s 1 ease;
+        animation-fill-mode: forwards;
+      }
+    }
+  }
+
+  &.open-doors {
+    width: 0%;
+    transition: all 1s linear 2.5s;
+  }
+
 }

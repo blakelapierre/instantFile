@@ -35,7 +35,24 @@ module.exports = function instantFileDirective() {
           $location.path(handle);
           $scope.$digest();
         });
-      
+      };
+
+      $scope.blastDoorsMessages = [
+        'Welcome to instaFile.io',
+        'Encrypted Peer-to-Peer File Sharing',
+        'Brought to you by WebRTC'
+      ];
+
+      this.addBlastDoorsMessage = function(message) {
+        $scope.blastDoorsMessages.push(message);
+      };
+
+      this.openBlastDoors = function() {
+        $scope.blastDoorsOpen = true;
+      };
+
+      this.closeBlastDoors = function() {
+        $scope.blastDoorsOpen = false;
       };
     }]
   };

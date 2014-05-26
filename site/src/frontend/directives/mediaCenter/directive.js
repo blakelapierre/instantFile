@@ -5,6 +5,17 @@ module.exports = ['$sce', function($sce) {
     scope: {
       file: '=file'
     },
+    link: function($scope, element, attributes) {
+      var video = element.find('video');
+
+      $scope.$watch('src', function(src) {
+        console.dir(element, $scope.file);
+      });
+
+      $scope.videoLoaded = function(event) {
+        console.log('loaded', event);
+      };
+    },
     controller: function($scope) {
       $scope.$watch('file', function(file) {
         $scope.type = null;

@@ -3,18 +3,3 @@
   <stats-center file="file" transfers="transfers" connections="connections" send-stats="sendStats" peers="peers"></stats-center>
   <control-center></control-center>
 </div>
-
-<div ng-class="{'door':true, 'upper-door':true, 'open-doors':blastDoorsOpen}">
-  <div class="table">
-    <div class="messages">
-      <div class="message" ng-repeat="message in blastDoorMessages track by $index">{{message}}</div>
-    </div>
-  </div>
-</div>
-<div ng-class="{'door':true, 'lower-door':true, 'open-doors':blastDoorsOpen}">
-  <div class="table">
-    <div class="messages">
-      <div class="message" ng-repeat="message in blastDoorMessages track by $index">{{message}}</div>
-    </div>
-  </div>
-</div>

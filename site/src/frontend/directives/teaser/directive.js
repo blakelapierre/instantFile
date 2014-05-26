@@ -2,8 +2,15 @@ module.exports = function() {
   return {
     restrict: 'E',
     template: require('./template.html'),
+    require: '^instantFile',
+    link: function($scope, element, attributes, instantFile) {
+      console.log(instantFile)
+      // maybe extract this out to a factory?
+      instantFile.openBlastDoors();
+    },
     controller: ['$scope', 'host', function($scope, host) {
       host.file = null;
+      //$scope.openBlastDoors();
     }]
   }
 };
