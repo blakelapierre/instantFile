@@ -7,7 +7,8 @@ module.exports = function() {
       transfers: '=',
       connections: '=',
       sendStats: '=',
-      peers: '='
+      peers: '=',
+      oldPeers: '='
     },
     controller: ['$scope', 'host', function($scope, host) {
       if (host.file) {

@@ -32,6 +32,8 @@ function HashList(idProperty) {
     this.removeByID = function(id) {
       var hObj = hash[id];
 
+      if (hObj == null) return;
+
       list.splice(hObj.index, 1);
       delete hash[id];
 
@@ -58,6 +60,8 @@ function HashList(idProperty) {
 
     this.removeByID = function(id) {
       var hObj = hash[id];
+
+      if (hObj == null) return;
 
       list.splice(hObj.index, 1);
       delete hash[id];

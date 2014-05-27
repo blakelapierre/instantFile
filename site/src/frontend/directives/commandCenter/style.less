@@ -1,6 +1,6 @@
 @keyframes expand-command-center {
   0% {
-    transform: scale(0.25);
+    transform: scale(0.5);
   }
   100% {
     transform: scale(1);
@@ -13,14 +13,86 @@ command-center {
   height: 100%;
 
   .container {
+    position: absolute;
     height: 100%;
-    width: 90%;
+    width: 100%;
 
-    margin: 0 auto;
+    .content {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+
+      padding: 1em 0;
+    }
 
     &.expand-command-center {
-      animation: expand-command-center 0.5s 1s 1 cubic-bezier(1, 0, 1, 1);
+      animation: expand-command-center 1.25s 0s 1 cubic-bezier(1, -1, 1, 1);
       animation-fill-mode: both;
+    }
+  }
+
+  .top-bar {
+    position: absolute;
+    height: 1em;
+    width: 100%;
+
+    display: table;
+
+    background-color: #333;
+
+    color: #0f0;
+
+    text-shadow: 0 0 5px #0f0;
+
+    span {
+      display: table-cell;
+      width: 25%;
+
+      text-align: center;
+    }
+
+    span:first-child {
+      text-align: left;
+    }
+
+    span:last-child {
+      text-align: right;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    a:visited {
+      color: #0f0;
+    }
+  }
+
+  .bottom-bar {
+    position: absolute;
+    height: 2em;
+    width: 100%;
+
+    display: table;
+
+    bottom: 0%;
+    
+    background-color: #fff;
+
+    color: #000;
+
+    div {
+      display: table-cell;
+    }
+
+    .input {
+      input {
+        border: none;
+        width: 100%;
+        height: 100%;
+
+        font-size: 1.8em;
+      }
     }
   }
 }

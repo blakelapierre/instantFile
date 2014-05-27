@@ -6,7 +6,6 @@ module.exports = function() {
       peer: '='
     },
     controller: ['$scope', function($scope) {
-
     }]
   }
 };

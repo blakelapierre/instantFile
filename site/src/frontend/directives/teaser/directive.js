@@ -6,7 +6,10 @@ module.exports = function() {
     link: function($scope, element, attributes, instantFile) {
       console.log(instantFile)
       // maybe extract this out to a factory?
-      instantFile.openBlastDoors();
+      setTimeout(function() {
+        instantFile.openBlastDoors();
+        $scope.$apply();
+      }, 900);
     },
     controller: ['$scope', 'host', function($scope, host) {
       host.file = null;

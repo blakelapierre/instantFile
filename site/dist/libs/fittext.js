@@ -38,6 +38,8 @@
       var compressor = kompressor || 1;
 
       var resizer = function () {
+        console.log(el);
+        console.log('clientWidth', el.clientWidth);
         el.style.fontSize = Math.max(Math.min(el.clientWidth / (compressor*10), parseFloat(settings.maxFontSize)), parseFloat(settings.minFontSize)) + 'px';
       };
 

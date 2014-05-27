@@ -59,6 +59,8 @@
     "angular": "global:angular",
     "socket.io": "global:io",
     "webrtc.io": "global:rtc",
-    "fitText": "global:fitText"
+    "fitText": "global:fitText",
+    "bigText": "global:BigText",
+    "jQuery": "global:$"
   }
 }

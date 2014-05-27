@@ -9,24 +9,19 @@ module.exports = function commandCenterDirective() {
       $scope.addBlastDoorsMessage = instantFile.addBlastDoorsMessage;
       $scope.openBlastDoors = instantFile.openBlastDoors;
       $scope.closeBlastDoors = instantFile.closeBlastDoors;
-
-      $scope.closeBlastDoors();
     },
     controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       var room = $location.path().substr(1),
           roomManager = {},
           signal = rtc.connectToSignal('//' + window.location.host);
 
-      // Take this out!?
-      if (host.file) {
-        setTimeout(function() {
-          $scope.openBlastDoors();
-          $scope.$apply();
-        }, 500);
-      }
-
   
       $scope.peers = [];
+      $scope.connectedPeers = [];
+      $scope.oldPeers = [];
+
+      $scope.signalingState = 'no peers';
+      $scope.iceConnectionState = 'no peers';
 
       signal.joinRoom(room);
 
@@ -91,7 +86,10 @@ module.exports = function commandCenterDirective() {
                 var state = peer.peerConnection.iceConnectionState;
                 $scope.addBlastDoorsMessage('ICE: ' + state);
                 if (state == 'connected') {
-                  $scope.openBlastDoors();
+                  setTimeout(function() {
+                    $scope.openBlastDoors();
+                    $scope.$apply();
+                  }, 1000);
                 }
               }
               $scope.$apply();
@@ -114,10 +112,12 @@ module.exports = function commandCenterDirective() {
           }
         },
         'peer added': function(peer) {
+          console.log(peer);
           $scope.peers.push(peer);
 
           if (signal.myID == room) {
             peer.connect();
+            $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
             var channel = peer.createChannel('instafile.io', {}, fileServeHandlers());
           }
 
@@ -128,8 +128,10 @@ module.exports = function commandCenterDirective() {
           $scope.$apply();
         },
         'peer removed': function(peer) {
-          console.log('peer removed');
+          console.log('peer removed', peer);
+          $scope.oldPeers.push(peer);
           _.remove($scope.peers, function(p) { return p == peer; });
+          _.remove($scope.connectedPeers, function(p) { return p == peer; });
           $scope.$apply();
         },
         'peer ice_candidate': function(peer, candidate) {
@@ -150,6 +152,12 @@ module.exports = function commandCenterDirective() {
         },
         'peer signaling_state_change': function(peer, event) {
           console.log('peer signaling_state_change', arguments);
+          $scope.signalingState = peer.peerConnection.signalingState;
+          $scope.$apply();
+        },
+        'peer ice_connection_state_change': function(peer, event) {
+          $scope.iceConnectionState = peer.peerConnection.iceConnectionState;
+          $scope.$apply();
         },
         'peer data_channel connected': function(peer, channel, handlers) {
           attachChannel(channel, handlers);

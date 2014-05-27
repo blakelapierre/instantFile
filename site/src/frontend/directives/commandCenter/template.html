@@ -1,5 +1,25 @@
 <div ng-class="{'container': true, 'expand-command-center': blastDoorsOpen}">
-  <media-center file="file"></media-center>
-  <stats-center file="file" transfers="transfers" connections="connections" send-stats="sendStats" peers="peers"></stats-center>
-  <control-center></control-center>
+  <div class="content">
+    <media-center file="file"></media-center>
+    <stats-center file="file" transfers="transfers" connections="connections" send-stats="sendStats" peers="peers" old-peers="oldPeers"></stats-center>
+    <control-center></control-center>
+  </div>
+
+  <div class="top-bar">
+    <span><a href="http://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" target="_blank">DTLS v1.2</a></span>
+    <span><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCSignalingState" target="_blank">SIGNAL: {{signalingState}}</a></span>
+    <span><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCIceConnectionState" target="_blank">ICE: {{iceConnectionState}}</a></span><!-- does this really belong here? what about on the host screen and you are connected to multiple peers? -->
+    <span>{{peers.length}} Peers {{connectedPeers.length}} Connected</span>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="input">
+      <input type="text" placeholder="Post message... (doesn't work, you can try though)" />
+    </div>
+    <div class="menu">
+    -
+    -
+    -
+    </div>
+  </div>
 </div>

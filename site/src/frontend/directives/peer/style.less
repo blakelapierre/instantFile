@@ -1,29 +1,47 @@
 peer {
+  width: 100%;
+
   display: block;
   
   .peer-id {
     
   }
 
-  .progress-container {
+  .channel {
     width: 100%;
-    height: 2em;
 
-    border: solid 1px #009;
-
-    .progress-bar {
-      position: absolute;
+    .progress-container {
+      width: 100%;
       height: 2em;
 
-      background-color: #006;
+      border: solid 1px #009;
+
+      .progress-bar {
+        width: 100%;
+
+        height: 2em;
+
+        background-color: #006;
+      }
     }
 
     .transfer-stats {
-      position: absolute;
-      left: 0%;
+      position: relative;
       width: 100%;
-      margin-top: 0.5em;
+
+      left: 0%;
+      top: -2em;
+
+      width: 100%;
+
+      font-size: 1em;
+
       text-align: center;
+
+      span {
+        display: block;
+        width: 100%;
+      }
     }
   }
 }
