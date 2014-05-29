@@ -31,7 +31,37 @@ module.exports = function commandCenterDirective() {
           close: function(channel) { },
           message: function(channel, message) {
             if (message == room) {
+              var measurements = [{
+                time: new Date().getTime(),
+                transferred: 0
+              }];
+
               sendFile(channel, host.file, function(transfer) {
+                var lastMeasurement = measurements[0],
+                    changed = transfer.transferred > lastMeasurement.transferred;
+
+                if (changed) {
+                  var measurement = {
+                    time: transfer.lastSend,
+                    transferred: transfer.transferred
+                  };
+                  measurements.unshift(measurement);
+
+                  var cutoff = measurement.time - 1000, // One second
+                      oldest = measurements[measurements.length - 1],
+                      secondOldest = oldest;
+
+                  while (measurements.length > 2 && cutoff > secondOldest.time) {
+                    oldest = secondOldest;
+                    secondOldest = measurements.pop();
+                  }
+
+                  var dt = measurement.time - oldest.time,
+                      speed = (measurement.transferred - oldest.transferred) / dt * 1000;
+
+                  transfer.speed = speed;
+                }
+
                 $scope.$apply();
               });
             }
@@ -295,15 +325,14 @@ module.exports = function commandCenterDirective() {
           console.log(channel);
 
           function send() {
+            if (channel.readyState != 'open') return;
+
             var buffered = channel.bufferedAmount;
 
+            // I'm not sure lastIterations really does what I originally thought it would do.
             var toSend = Math.min(lastIterations * chunkSize, maxBufferAmount) - channel.bufferedAmount;
 
             var iterations = Math.ceil(toSend / chunkSize);
-
-            var transferred = transfer.transferred;
-
-
 
             var now = new Date().getTime();
             // Is there a better way to do this then to just run some
@@ -332,22 +361,22 @@ module.exports = function commandCenterDirective() {
                   break; // get me out of this for loop!
                 }
               }
-              if (backoff == 0) lastIterations++;
-
-              transferred = offset - channel.bufferedAmount;
-
-              transfer.transferred = transferred;
             }
 
-            transfer.speed = offset / (now - startTime) * 1000;  
+            if (backoff == 0) lastIterations++;
+
+            var transferred = offset - channel.bufferedAmount;
+
+            transfer.transferred = transferred;
             transfer.progress = transferred / transfer.total;
             transfer.backoff = backoff;
+            transfer.lastSend = now;
 
             if (progress) progress(transfer);
 
             if (transferred < byteLength) {
               if (backoff > 0) setTimeout(send, backoff);
-              else window.requestAnimationFrame(send);
+              else setTimeout(send, 0);
             }
           };
 
