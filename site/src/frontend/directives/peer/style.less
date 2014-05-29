@@ -1,3 +1,12 @@
+@keyframes peer-pop {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 peer {
   width: 100%;
 
@@ -44,4 +53,7 @@ peer {
       }
     }
   }
+
+  animation: peer-pop 0.25s 1 linear;
+  animation-fill-mode: forward;
 }
