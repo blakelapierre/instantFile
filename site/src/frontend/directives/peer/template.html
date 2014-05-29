@@ -2,7 +2,7 @@
 
 <div class="channel" ng-repeat="channel in peer.channels">
   <div ng-show="channel.transfer" class="progress-container">
-    <div class="progress-bar" ng-style="{'width': (channel.transfer.stats.progress * 100) + '%'}"></div>
+    <div class="progress-bar" ng-style="{'width': (channel.transfer.progress * 100) + '%'}"></div>
   </div>
-  <div class="transfer-stats"><span>{{channel.transfer.stats.transferred | number}} B / {{channel.transfer.stats.total | number}} B {{channel.transfer.stats.speed | number : 0}} B/s</span></div>
+  <div class="transfer-stats"><span>{{channel.transfer.transferred | number}} B / {{channel.transfer.total | number}} B {{channel.transfer.speed | number : 0}} B/s</span></div>
 </div>

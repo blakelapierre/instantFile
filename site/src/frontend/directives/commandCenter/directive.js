@@ -26,21 +26,14 @@ module.exports = function commandCenterDirective() {
       signal.joinRoom(room);
 
       var fileServeHandlers = (function() {
-        var stats;
         return {
-          open: function(channel) {
-            channel.send('test');
-          },
-          close: function(channel) {
-            _.remove($scope.transfers, function(s) { return s == stats; });
-            $scope.$apply();
-          },
+          open: function(channel) { },
+          close: function(channel) { },
           message: function(channel, message) {
             if (message == room) {
-              stats = sendFile(channel, host.file, function(stats) {
+              sendFile(channel, host.file, function(transfer) {
                 $scope.$apply();
               });
-              $scope.transfers.push(stats);
             }
           },
           error: function(channel, error) {}
@@ -177,7 +170,7 @@ module.exports = function commandCenterDirective() {
       function attachChannel(channel, handlers) {
         var queueApply = _.throttle(function() {
           $scope.$apply();
-        }, 50);
+        }, 100);
 
         handlers.open = function(channel) {
           // Request file
@@ -189,7 +182,60 @@ module.exports = function commandCenterDirective() {
         };
 
         handlers.message = function(channel, message) {
+          var parts = message.toString().split(';');
 
+          if (parts.length != 3) throw Error('Got bad file transfer header');
+
+          var byteLength = parseInt(parts[0]),
+              name = parts[1],
+              type = parts[2];
+
+          var stats = {
+            transferred: 0,
+            total: byteLength,
+            speed: 0
+          };
+
+          var transfer = channel.transfer = {
+            byteLength: byteLength,
+            name: name,
+            type: type,
+            transferred: 0,
+            speed: 0,
+            position: 0,
+            buffers: [],
+            start: new Date().getTime()
+          };
+
+          // Note, this reassigns the current function (yes, the one that you are in, right now!)
+          handlers.message = function(channel, message) {
+            var now = new Date().getTime();
+
+            transfer.buffers.push(message);
+
+            transfer.position += message.byteLength || message.size; // Firefox uses 'size'
+
+            transfer.transferred = transfer.position;
+            transfer.total = transfer.byteLength;
+            transfer.progress = transfer.transferred / transfer.total;
+            transfer.speed = transfer.position / (now - transfer.start) * 1000;
+      
+            if (transfer.position == transfer.byteLength) {
+              var blob = new Blob(transfer.buffers, {type: transfer.type});
+
+              $scope.file = blob;
+
+              // var a = document.createElement('a');
+              // document.body.appendChild(a); // Firefox apparently needs this
+              // a.href = window.URL.createObjectURL(blob);
+              // a.download = transfer.name;
+              // a.click();
+              // a.remove();
+            }
+            queueApply();
+          };
+
+          queueApply();
 
 /* possible to use with unreliable transport 
           acknowledgedChunkSeq
@@ -198,62 +244,6 @@ module.exports = function commandCenterDirective() {
             missingChunks[seq] = seq;
           }
 */
-          var incoming = channel.transfer;
-          if (incoming) {
-            var now = new Date().getTime(),
-                stats = incoming.stats;
-
-            incoming.buffers.push(message);
-
-            incoming.position += message.byteLength || message.size; // Firefox uses 'size'
-
-            stats.transferred = incoming.position;
-            stats.total = incoming.byteLength;
-            stats.progress = stats.transferred / stats.total;
-            stats.speed = incoming.position / (now - incoming.start) * 1000;
-      
-            if (incoming.position == incoming.byteLength) {
-              var blob = new Blob(incoming.buffers, {type: incoming.type});
-
-              $scope.file = blob;
-
-              // var a = document.createElement('a');
-              // document.body.appendChild(a); // Firefox apparently needs this
-              // a.href = window.URL.createObjectURL(blob);
-              // a.download = incoming.name;
-              // a.click();
-              // a.remove();
-            }
-          }
-          else {
-            var parts = message.toString().split(';'),
-                byteLength = parseInt(parts[0]),
-                name = parts[1],
-                type = parts[2];
-
-            if (parts.length == 3) {
-
-              var stats = {
-                transferred: 0,
-                total: byteLength,
-                speed: 0
-              };
-
-              $scope.transfers.push(stats);
-
-              channel.transfer = {
-                byteLength: byteLength,
-                name: name,
-                type: type,
-                stats: stats,
-                position: 0,
-                buffers: [],
-                start: new Date().getTime()
-              };
-            }
-          }
-
-          queueApply();
         };
 
         handlers.error = function(channel, error) {
@@ -289,29 +279,38 @@ module.exports = function commandCenterDirective() {
         getFileBuffer(file, function(buffer) {
           channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
 
-          var offset = 0,
+          var byteLength = buffer.byteLength,
+              offset = 0,
               backoff = 0,
-              iterations = 1,
-              startTime = new Date().getTime();
+              lastIterations = 1,
+              startTime = new Date().getTime(),
+              maxBufferAmount = Number.POSITIVE_INFINITY,
+              transfer = channel.transfer = {};
 
-          stats.startTime = startTime;
-          stats.transferred = 0;
-          stats.total = buffer.byteLength;
-          stats.speed = 0;
-
-          channel.transfer = {stats: stats}; // A workaround for now, do we really want this?
+          transfer.startTime = startTime;
+          transfer.transferred = 0;
+          transfer.total = byteLength;
+          transfer.speed = 0;
 
           console.log(channel);
 
-          function sendChunk() {
-            if (channel.readyState != 'open') return;
+          function send() {
+            var buffered = channel.bufferedAmount;
 
+            var toSend = Math.min(lastIterations * chunkSize, maxBufferAmount) - channel.bufferedAmount;
+
+            var iterations = Math.ceil(toSend / chunkSize);
+
+            var transferred = transfer.transferred;
+
+
+
+            var now = new Date().getTime();
             // Is there a better way to do this then to just run some
             // arbitrary number of iterations each round?
             // Maybe watch the socket's buffer size?
             for (var i = 0; i < iterations; i++) {
-              var now = new Date().getTime(),
-                  size = Math.min(chunkSize, buffer.byteLength - offset);
+              var size = Math.min(chunkSize, byteLength - offset);
 
               if (size > 0) {
                 var chunk = buffer.slice(offset, offset + size);
@@ -321,34 +320,38 @@ module.exports = function commandCenterDirective() {
 
                   offset += size;
                   backoff = 0;
-
-                  if (iterations < 100) iterations++;
                 } catch(e) {
+                  console.log(e);
                   backoff += 100;
-                  stats.backoff = backoff;
                   
-                  if (iterations > 1) iterations--;
+                  maxBufferAmount = channel.bufferedAmount;
+
+                  if (maxBufferAmount == 0) maxBufferAmount = Number.POSITIVE_INFINITY;
+
+                  lastIterations--;
                   break; // get me out of this for loop!
                 }
               }
+              if (backoff == 0) lastIterations++;
 
-              stats.transferred = offset - channel.bufferedAmount;
-              stats.speed = offset / (now - startTime) * 1000;  
-              stats.progress = stats.transferred / stats.total;
-              stats.backoff = backoff;
+              transferred = offset - channel.bufferedAmount;
 
-              if (stats.progress >= 1) {
-                progress(stats)
-                return;
-              }
+              transfer.transferred = transferred;
             }
 
-            if (progress) progress(stats);
+            transfer.speed = offset / (now - startTime) * 1000;  
+            transfer.progress = transferred / transfer.total;
+            transfer.backoff = backoff;
 
-            if (stats.transferred < buffer.byteLength) setTimeout(sendChunk, backoff);
+            if (progress) progress(transfer);
+
+            if (transferred < byteLength) {
+              if (backoff > 0) setTimeout(send, backoff);
+              else window.requestAnimationFrame(send);
+            }
           };
 
-          sendChunk();
+          send();
         });
 
         return stats;
