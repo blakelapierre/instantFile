@@ -29,7 +29,7 @@ module.exports = function instantFileDirective() {
       });
 
       function launchCommandCenter() {
-        var signal = rtc.connectToSignal('https:aaa//' + window.location.host);
+        var signal = rtc.connectToSignal('https://' + window.location.host);
         signal.on('ready', function(handle) {
           console.log('ready');
           $location.path(handle);
