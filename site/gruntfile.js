@@ -1,3 +1,5 @@
+var es6ify = require('es6ify');
+
 module.exports = function(grunt) {
   var pkg = grunt.file.readJSON('package.json');
 

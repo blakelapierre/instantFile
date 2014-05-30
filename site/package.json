@@ -31,7 +31,8 @@
     "request": "~2.34.0",
     "ws": "~0.4.31",
     "lodash": "~2.4.1",
-    "node-uuid": "~1.4.1"
+    "node-uuid": "~1.4.1",
+    "traceur": "0.0.42"
   },
   "devDependencies": {
     "grunt": "~0.4.4",
@@ -47,10 +48,12 @@
     "grunt-preprocess": "~4.0.0",
     "browserify": "3.33.0",
     "browserify-shim": "3.3.2",
-    "partialify": "~3.1.1"
+    "partialify": "~3.1.1",
+    "es6ify": "~1.1.0"
   },
   "browserify": {
     "transform": [
+      "es6ify",
       "browserify-shim",
       "partialify"
     ]
