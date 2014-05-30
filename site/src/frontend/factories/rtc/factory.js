@@ -1,7 +1,8 @@
 // Coordinates your peers. Sets up connections, streams, and channels.
 // Based on webrtc.io
 var _ = require('lodash'),
-    io = require('socket.io');
+    io = require('socket.io'),
+    Peer = require('./peer');
 
 var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
 var URL = (window.URL || window.webkitURL || window.msURL || window.oURL);

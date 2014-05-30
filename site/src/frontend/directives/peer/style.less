@@ -79,6 +79,21 @@ peer {
     }
   }
 
+  &.old-peer {
+    direction: rtl;
+
+    .peer-id {
+      text-align: right;
+    }
+
+    .channel {
+      .progress-bar {
+        left: 0%;
+        right: auto;
+      }
+    }
+  }
+
   animation: peer-pop 0.25s 1 linear;
   animation-fill-mode: forward;
 }
