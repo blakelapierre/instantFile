@@ -1,6 +1,14 @@
 // Coordinates your peers. Sets up connections, streams, and channels.
 // Based on webrtc.io
 
+class Test {
+  constructor(t) {
+    console.log(t);
+  }
+}
+
+new Test('test!!!!!!!!!!!!!!!!!!!!!!!!!');
+
 var _ = require('lodash'),
     io = require('socket.io');
 
@@ -45,7 +53,6 @@ function fire(event) {
   var listeners = events[event] || [],
       args = Array.prototype.slice.call(arguments, 1);
 
-  console.log('Firing', event);
   for (var i = 0; i < listeners.length; i++) {
     listeners[i].apply(null, args);
   }

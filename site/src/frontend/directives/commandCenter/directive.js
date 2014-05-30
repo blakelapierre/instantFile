@@ -57,7 +57,7 @@ module.exports = function commandCenterDirective() {
                   }
 
                   var dt = measurement.time - oldest.time,
-                      speed = (measurement.transferred - oldest.transferred) / dt * 1000;
+                      speed = 1000 * (measurement.transferred - oldest.transferred) / dt;
 
                   transfer.speed = speed;
                 }

@@ -10,27 +10,52 @@
 peer {
   width: 100%;
 
-  display: block;
+  display: table;
   
   .peer-id {
-    
+    width: 60%;
+
+    display: table-cell;
+
+    vertical-align: middle;
+
+    text-align: left;
   }
 
   .channel {
-    width: 100%;
+    width: 30%;
+
+    display: table-cell;
+
+    vertical-align: middle;
+
+    padding: 0 5%;
 
     .progress-container {
+      position: relative;
       width: 100%;
-      height: 2em;
+      height: 0.5em;
 
-      border: solid 1px #009;
+      border: solid 1px #00f;
 
       .progress-bar {
-        width: 100%;
+        position: absolute;
 
-        height: 2em;
+        right: 0%;
 
-        background-color: #006;
+        width: 0%;
+
+        height: 0.5em;
+
+        background-color: #00f;
+      }
+
+      &.finished {
+        border: solid 1px #0f0;
+
+        .progress-bar {
+          background-color: #0f0;
+        }
       }
     }
 
