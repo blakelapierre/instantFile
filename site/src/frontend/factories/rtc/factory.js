@@ -78,8 +78,9 @@ function createPeer(id, emit, fire) {
       iceServers: [{url: 'stun:stun.l.google.com:19302'}]
     });
     
-    connection.onnegotiationneeded = function() {
+    connection.onnegotiationneeded = function(event) {
       sendOffer();
+      fire ('peer negotiation_needed', peer, event);
     };
 
     connection.onicecandidate = function(event) {
@@ -97,16 +98,15 @@ function createPeer(id, emit, fire) {
     };
 
     connection.onsignalingstatechange = function(event) {
-      console.log(event);
       fire('peer signaling_state_change', peer, event);
     };
 
-    connection.onaddstream = function() {
-      fire('peer add_')
+    connection.onaddstream = function(event) {
+      fire('peer add_stream', peer, event);
     };
 
-    connection.onremovestream = function() {
-
+    connection.onremovestream = function(event) {
+      fire('peer remove_stream', peer, event);
     };
 
     connection.oniceconnectionstatechange = function(event) {
