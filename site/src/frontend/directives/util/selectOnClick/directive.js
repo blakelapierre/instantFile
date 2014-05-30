@@ -4,7 +4,7 @@ module.exports = function() {
     link: function($scope, element, attributes) {
       element.bind('click', function(e) {
         if (window.getSelection && document.createRange) {
-            selection = window.getSelection();
+            var selection = window.getSelection();
             range = document.createRange();
             range.selectNodeContents(element[0]);
             selection.removeAllRanges();
