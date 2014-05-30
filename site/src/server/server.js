@@ -4,7 +4,7 @@ module.exports = function(config, callback) {
       path = require('path'),
       express = require('express'),
       webRTC = require('./lib/webrtc.io'),
-      socketIO = require('socket.io'),
+      io = require('socket.io'),
       signal = require('./signal'),
       app = express();
 
@@ -26,9 +26,9 @@ module.exports = function(config, callback) {
         cert: config.cert
       },
       webserver = https.createServer(sslOptions, app),
-      io = socketIO.listen(webserver);
+      socketIO = io(webserver);
 
-  var signalStats = signal(io);
+  var signalStats = signal(socketIO);
 
   var router = express.Router();
 

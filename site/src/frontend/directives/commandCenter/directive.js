@@ -13,7 +13,7 @@ module.exports = function commandCenterDirective() {
     controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
       var room = $location.path().substr(1),
           roomManager = {},
-          signal = rtc.connectToSignal('//' + window.location.host);
+          signal = rtc.connectToSignal('https://' + window.location.host);
 
   
       $scope.peers = [];

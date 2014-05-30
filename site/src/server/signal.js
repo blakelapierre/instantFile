@@ -148,10 +148,9 @@ module.exports = function(io) {
     if (room.length() == 0) rooms.removeByID(roomName);
   };
 
-  io.set('log level', 0);
-
   io.sockets.on('connection', function(socket) {
     //socket.peerID = uuid.v4();
+    console.log(socket);
     socket.emit('your_id', socket.id);
 
     socket.rooms = new HashList('_self');

@@ -193,114 +193,128 @@ function createPeer(id, emit, fire) {
 +  Signalling
 */
 function connectToSignal(server, onReady) {
-  var socket = io.connect(server);
+  var socket = io(server);
 
   function emit(event, data) { console.log('emitting', event, data); socket.emit(event, data); };
 
-  socket.on('your_id', function(myID) {
-    var peers = [],
-        peersHash = {};
-
-    signal.myID = myID;
-
-    function getPeer(id) {
-      return peersHash[id];
-    };
-
-    function addPeer(id) {
-      var peer = createPeer(id, emit, fire);
-      peers.push(peer);
-      peersHash[id] = peer;
-      
-      fire('peer added', peer);
-    };
-
-    function removePeerByID(id) {
-      var peer = getPeer(id);
-      if (peer.peerConnection) peer.peerConnection.close();
-      _.remove(peers, function(peer) { return peer.id === id; });
-      delete peersHash[id];
-      fire('peer removed', peer);
-    };
-
-    function addIceCandidate(peerID, candidate) {
-      var peer = getPeer(peerID),
-          connection = peer.peerConnection;
-
-      connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
-        fire('peer ice_candidate', peer, candidate);
-      }, function(err) {
-        fire('peer error ice_candidate', peer, err, candidate);
-      });
-    };
-
-    function receiveAnswer(peerID, answer) {
-      var peer = getPeer(peerID),
-          connection = peer.peerConnection;
-
-      connection.setRemoteDescription(new RTCSessionDescription(answer));
-      fire('peer receive answer', peer, answer);
-    };
-
-    function sendAnswer(peerID, offer) {
-      var peer = getPeer(peerID),
-          connection = peer.peerConnection;
-
-      if (connection == null) {
-        peer.connect();
-        connection = peer.peerConnection;
-      }      
-      
-      connection.setRemoteDescription(new RTCSessionDescription(offer), function() {
-        connection.createAnswer(function(answer) {
-          connection.setLocalDescription(answer, function() {
-            emit('peer answer', {
-              peerID: peerID,
-              answer: answer
-            });
-            fire('peer send answer', peer, answer);
-          }, function(err) {
-            fire('peer error set_local_description', peer, err, answer);
-          });
-        }, function(err) {
-          fire('peer error send answer', peer, err, offer);
-        });
-      }, function(err) {
-        fire('peer error set_remote_description', peer, err, offer);
-      });
-      fire('peer receive offer', peer, offer);
-    };
-
-    socket.on('peer list', function(data) {
-      _.each(data.peerIDs, addPeer);
-      fire('peer list', data.roomName, data.peerIDs);
-    });
-
-    socket.on('peer join', function(id) {
-      addPeer(id);
-    });
-
-    socket.on('peer leave', function(id) {
-      removePeerByID(id);
-    });
-
-    socket.on('peer ice_candidate', function(data) {
-      addIceCandidate(data.peerID, data);
-    });
-
-    socket.on('peer offer', function(data) {
-      sendAnswer(data.peerID, data.offer);
-    });
-
-    socket.on('peer answer', function(data) {
-      receiveAnswer(data.peerID, data.answer);
-    });
-
-    fire('ready', myID);
+  socket.on('error', function() {
+    console.log('error', arguments);
   });
 
-  socket.on('close', function() {
+  socket.on('connect', function() {
+    console.log(socket);
+    console.log('connect', arguments);
 
+    socket.on('event', function() {
+      console.log('event');
+    });
+
+    socket.on('your_id', function(myID) {
+      console.log('your_id');
+      var peers = [],
+          peersHash = {};
+
+      signal.myID = myID;
+
+      function getPeer(id) {
+        return peersHash[id];
+      };
+
+      function addPeer(id) {
+        var peer = createPeer(id, emit, fire);
+        peers.push(peer);
+        peersHash[id] = peer;
+        
+        fire('peer added', peer);
+      };
+
+      function removePeerByID(id) {
+        var peer = getPeer(id);
+        if (peer.peerConnection) peer.peerConnection.close();
+        _.remove(peers, function(peer) { return peer.id === id; });
+        delete peersHash[id];
+        fire('peer removed', peer);
+      };
+
+      function addIceCandidate(peerID, candidate) {
+        var peer = getPeer(peerID),
+            connection = peer.peerConnection;
+
+        connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
+          fire('peer ice_candidate', peer, candidate);
+        }, function(err) {
+          fire('peer error ice_candidate', peer, err, candidate);
+        });
+      };
+
+      function receiveAnswer(peerID, answer) {
+        var peer = getPeer(peerID),
+            connection = peer.peerConnection;
+
+        connection.setRemoteDescription(new RTCSessionDescription(answer));
+        fire('peer receive answer', peer, answer);
+      };
+
+      function sendAnswer(peerID, offer) {
+        var peer = getPeer(peerID),
+            connection = peer.peerConnection;
+
+        if (connection == null) {
+          peer.connect();
+          connection = peer.peerConnection;
+        }      
+        
+        connection.setRemoteDescription(new RTCSessionDescription(offer), function() {
+          connection.createAnswer(function(answer) {
+            connection.setLocalDescription(answer, function() {
+              emit('peer answer', {
+                peerID: peerID,
+                answer: answer
+              });
+              fire('peer send answer', peer, answer);
+            }, function(err) {
+              fire('peer error set_local_description', peer, err, answer);
+            });
+          }, function(err) {
+            fire('peer error send answer', peer, err, offer);
+          });
+        }, function(err) {
+          fire('peer error set_remote_description', peer, err, offer);
+        });
+        fire('peer receive offer', peer, offer);
+      };
+
+      socket.on('peer list', function(data) {
+        _.each(data.peerIDs, addPeer);
+        fire('peer list', data.roomName, data.peerIDs);
+      });
+
+      socket.on('peer join', function(id) {
+        addPeer(id);
+      });
+
+      socket.on('peer leave', function(id) {
+        removePeerByID(id);
+      });
+
+      socket.on('peer ice_candidate', function(data) {
+        addIceCandidate(data.peerID, data);
+      });
+
+      socket.on('peer offer', function(data) {
+        sendAnswer(data.peerID, data.offer);
+      });
+
+      socket.on('peer answer', function(data) {
+        receiveAnswer(data.peerID, data.answer);
+      });
+
+      fire('ready', myID);
+    });
+
+    socket.on('disconnect', function() {
+
+    });
   });
 
   function joinRoom(roomName) {

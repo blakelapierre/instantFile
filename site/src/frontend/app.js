@@ -19,6 +19,8 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   .factory('host',  require('./factories/host/factory'))
   .factory('rtc',   require('./factories/rtc/factory'))
 
+  .filter('transferRate',  require('./directives/util/transferRate/filter'))
+  
   .config(function($routeProvider, $compileProvider) {
     $routeProvider
       .when('/:id', {
