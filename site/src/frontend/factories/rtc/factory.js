@@ -193,6 +193,7 @@ function createPeer(id, emit, fire) {
 +  Signalling
 */
 function connectToSignal(server, onReady) {
+  console.log('connecting to', server);
   var socket = io(server);
 
   function emit(event, data) { console.log('emitting', event, data); socket.emit(event, data); };
