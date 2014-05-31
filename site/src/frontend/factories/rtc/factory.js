@@ -203,13 +203,6 @@ function connectToSignal(server, onReady) {
   });
 
   socket.on('connect', function() {
-    console.log(socket);
-    console.log('connect', arguments);
-
-    socket.on('event', function() {
-      console.log('event');
-    });
-
     socket.on('your_id', function(myID) {
       console.log('your_id');
       var peers = [],
