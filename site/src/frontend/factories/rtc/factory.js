@@ -198,36 +198,16 @@ function connectToSignal(server, onReady) {
         fire('peer receive offer', peer, offer);
       };
 
-      socket.on('peer list', function(data) {
-        _.each(data.peerIDs, addPeer);
-        fire('peer list', data.roomName, data.peerIDs);
-      });
-
-      socket.on('peer join', function(id) {
-        addPeer(id);
-      });
-
-      socket.on('peer leave', function(id) {
-        removePeerByID(id);
-      });
-
-      socket.on('peer ice_candidate', function(data) {
-        addIceCandidate(data.peerID, data);
-      });
-
-      socket.on('peer offer', function(data) {
-        sendAnswer(data.peerID, data.offer);
-      });
-
-      socket.on('peer answer', function(data) {
-        receiveAnswer(data.peerID, data.answer);
-      });
+      _.each({
+        'peer list': (data) => _.each(data.peerIDs, addPeer),
+        'peer join': (id) => addPeer(id),
+        'peer leave': (id) => removePeerByID(id),
+        'peer ice_candidate', (data) => addIceCandidate(data.peerID, data),
+        'peer offer': (data) => sendAnswer(data.peerID, peer.offer),
+        'peer answer': (data) => receiveAnswer(data.peerID, data.answer)
+      }, (handler, name) => socket.on(name, handler));
 
       fire('ready', myID);
-    });
-
-    socket.on('disconnect', function() {
-
     });
   });
 
