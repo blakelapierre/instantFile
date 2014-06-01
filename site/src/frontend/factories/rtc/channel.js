@@ -1,8 +1,3 @@
-
-import {_} from 'lodash';
-
-var CHANNEL_EVENTS = ['open', 'close', 'message', 'error'];
-
 class Channel {
   constructor(peer, channel, channelListeners) {
     this._channel = channel;
@@ -14,9 +9,7 @@ class Channel {
   send(data) { this._channel.send(data); }
 
   get channel() { return this._channel; }
-  get peer()    { return this._peer; }
-
-  get readyState() { return this._channel.readyState; }
+  get peer() { return this._peer; }
 
   /*
   +  Event Handling

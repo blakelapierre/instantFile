@@ -204,7 +204,10 @@ module.exports = function commandCenterDirective() {
       }
 
       signal.on({
-        'peer list': function(roomName, peerIDs) {
+        'peer list': function(data) {
+          var {roomName, peerIDs} = data;
+
+          console.log('peer list');
           if (signal.myID != room && roomName == room) {
             if (peerIDs.indexOf(room) == -1) {
               $scope.addBlastDoorsMessage('Sorry, the host has left.');
@@ -228,10 +231,16 @@ module.exports = function commandCenterDirective() {
           if (peer.id == room) {
             $scope.addBlastDoorsMessage('Peer Alive.........Connecting');
 
-            peer.on('channel added', (channel) => {
-              console.log('channel added');
-              channel.on(fileReceiveHandlers());
-              $scope.$apply();
+            peer.on({
+              'channel added': (channel) => {
+                console.log('channel added', channel);
+                channel.on(fileReceiveHandlers());
+                $scope.$apply();
+              },
+              'channel removed': (channel) => {
+                console.log('channel removed', channel);
+                $scope.$apply();
+              }
             });
           }
 
@@ -244,8 +253,8 @@ module.exports = function commandCenterDirective() {
           _.remove($scope.connectedPeers, function(p) { return p == peer; });
           $scope.$apply();
         },
-        'peer ice_candidate': function(peer, candidate) {
-          console.log('peer ice_candidate', peer, candidate);
+        'peer ice_candidate accepted': function(peer, candidate) {
+          console.log('peer ice_candidate accepted', peer, candidate);
         },
         'peer receive offer': function(peer, offer) {
           console.log('peer receive offer', peer, offer);

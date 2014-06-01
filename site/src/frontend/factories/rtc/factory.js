@@ -155,7 +155,7 @@ function connectToSignal(server, onReady) {
             connection = peer.connection;
 
         connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
-          fire('peer ice_candidate', peer, candidate);
+          fire('peer ice_candidate accepted', peer, candidate);
         }, function(err) {
           fire('peer error ice_candidate', peer, err, candidate);
         });
@@ -203,9 +203,12 @@ function connectToSignal(server, onReady) {
         'peer join': (id) => addPeer(id),
         'peer leave': (id) => removePeerByID(id),
         'peer ice_candidate': (data) => addIceCandidate(data.peerID, data),
-        'peer offer': (data) => sendAnswer(data.peerID, peer.offer),
+        'peer offer': (data) => sendAnswer(data.peerID, data.offer),
         'peer answer': (data) => receiveAnswer(data.peerID, data.answer)
-      }, (handler, name) => socket.on(name, handler));
+      }, (handler, name) => socket.on(name, function() {
+        handler.apply(this, arguments);
+        fire(name, ...arguments);
+      }));
 
       fire('ready', myID);
     });

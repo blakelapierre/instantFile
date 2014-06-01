@@ -1,9 +1,11 @@
-import {Channel} from './channel';
-
 import {_} from 'lodash';
 
-var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+import {Emitter} from './../../lib/emitter';
 
+import {Channel} from './channel';
+
+
+var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
 
 var iceServers = [{url: 'stun:stun.l.google.com:19302'}];
 
@@ -18,6 +20,8 @@ class Peer {
     this._streams = [];
     this._events = {};
     this._connectionListeners = connectionListeners;
+
+    this._nextChannelID = 0;
   }
 
   connect() {
@@ -28,31 +32,21 @@ class Peer {
     _.each(this._connectionListeners, 
       (listener, eventName) => connection.addEventListener(eventName.replace(/\_/g, ''), listener));
 
-    connection.addEventListener('datachannel', (event) => {
-      var channel = new Channel(this, event.channel, {
-        'close': () => _.remove(this._channels, function(c) { return c.label === label; })
-      });
-
-      this._channels.push(channel);
-
-      this.fire('channel added', channel);
-    });
+    connection.addEventListener('datachannel', 
+      (event) => this._addChannel(new Channel(this, event.channel, { })));
   
     this._connection = connection;
   }
 
   addChannel(label, options, channelListeners) {
-    var channel = new Channel(this, this.connection.createDataChannel(label, options), channelListeners);
+    label = label || ('data-channel-' + this._nextChannelID++);
 
-    channel.on({
-      'close': () => _.remove(this._channels, function(c) { return c.label === label; })
-    });
+    return this._addChannel(new Channel(this, this.connection.createDataChannel(label, options), channelListeners));
+  }
 
-    this._channels.push(channel);
-
-    this.fire('channel added', channel);
-
-    return channel;
+  removeChannel(label) {
+    var removed = _.remove(this._channels, function(c) { return c.label === label; })
+    if (removed.length > 0) _.each(removed, (channel) => this.fire('channel removed', channel));
   }
 
   addStream() {
@@ -69,6 +63,18 @@ class Peer {
 
   // Do we want to expose this?!
   get connection() { return this._connection; }
+
+  _addChannel(channel) {
+    channel.on({
+      'close': () => this.removeChannel(channel.label)
+    });
+
+    this._channels.push(channel);
+
+    this.fire('channel added', channel);
+
+    return channel;
+  }
 
   /*
   +  Event Handling
