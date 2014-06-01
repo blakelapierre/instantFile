@@ -26,6 +26,10 @@ module.exports = function commandCenterDirective() {
       signal.joinRoom(room);
 
       var fileServeHandlers = (function() {
+        var queueApply = _.throttle(function() {
+          $scope.$apply();
+        }, 100);
+
         return {
           open: function(channel) { },
           close: function(channel) { },
@@ -64,7 +68,7 @@ module.exports = function commandCenterDirective() {
                   transfer.speed = speed;
                 }
 
-                $scope.$apply();
+                queueApply();
               });
             }
           },
@@ -339,7 +343,7 @@ module.exports = function commandCenterDirective() {
             var buffered = channel.bufferedAmount;
 
             // I'm not sure lastIterations really does what I originally thought it would do.
-            var toSend = Math.min(lastIterations * chunkSize, maxBufferAmount) - channel.bufferedAmount;
+            var toSend = Math.min(lastIterations * chunkSize, maxBufferAmount) - buffered;
 
             var iterations = Math.ceil(toSend / chunkSize);
 
@@ -362,7 +366,7 @@ module.exports = function commandCenterDirective() {
                   console.log(e);
                   backoff += 100;
                   
-                  maxBufferAmount = channel.bufferedAmount;
+                  maxBufferAmount = buffered;
 
                   if (maxBufferAmount == 0) maxBufferAmount = Number.POSITIVE_INFINITY;
 
@@ -374,12 +378,14 @@ module.exports = function commandCenterDirective() {
 
             if (backoff == 0) lastIterations++;
 
-            var transferred = offset - channel.bufferedAmount;
+            var transferred = offset - buffered;
 
             transfer.transferred = transferred;
             transfer.progress = transferred / transfer.total;
             transfer.backoff = backoff;
             transfer.lastSend = now;
+            transfer.buffered = buffered;
+            transfer.maxBuffered = maxBufferAmount;
 
             if (progress) progress(transfer);
 
