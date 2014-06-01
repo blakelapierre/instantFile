@@ -1,8 +1,10 @@
 // Coordinates your peers. Sets up connections, streams, and channels.
 // Based on webrtc.io
+
+import {Peer} from './peer';
+
 var _ = require('lodash'),
-    io = require('socket.io'),
-    Peer = require('./peer');
+    io = require('socket.io');
 
 var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
 var URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -54,37 +56,13 @@ function fire(event) {
 */
 
 function createPeer(id, emit, fire) {
-  var streams = [],
-      channels = [];
-
-  var peer = {
-    id: id,
-    channels: channels,
-    streams: streams,
-    connect: function() { 
-      peer.peerConnection = createConnection(channels);
-    },
-    createChannel: function(label, options, handlers) {
-      var channel = peer.peerConnection.createDataChannel(label, options);
-
-      attachToChannel(channels, channel, handlers);
-
-      return channel;
-    }
-  };
-
-  function createConnection(channels) {
-    var connection = new RTCPeerConnection({
-      iceServers: [{url: 'stun:stun.l.google.com:19302'}]
-    });
-    
-    connection.onnegotiationneeded = function(event) {
+  var peer = new Peer(id, {
+    negotiation_needed: (e) => {
       sendOffer();
-      fire ('peer negotiation_needed', peer, event);
-    };
-
-    connection.onicecandidate = function(event) {
-      var candidate = event.candidate;
+      fire('peer negotiation_needed', peer, e);
+    },
+    ice_candidate: (e) => {
+      var candidate = e.candidate;
 
       if (candidate) {
         emit('ice_candidate', {
@@ -95,42 +73,104 @@ function createPeer(id, emit, fire) {
 
         fire('peer ice_candidate', peer, candidate);
       }
-    };
+    },
+    signaling_state_change: (e) => {
+      fire('peer signaling_state_change', peer, e);
+    },
+    ice_connection_state_change: (e) => fire('peer ice_connection_state_change', peer, e),
+    add_stream: (e) => fire('peer add_stream', peer, e),
+    remove_stream: (e) => fire('peer remove_stream', peer, e),
+    data_channel: (e) => {
+      var channel = e.channel;
 
-    connection.onsignalingstatechange = function(event) {
-      fire('peer signaling_state_change', peer, event);
-    };
+      fire('peer data_channel connected', peer, channel);
+    }
+  });
 
-    connection.onaddstream = function(event) {
-      fire('peer add_stream', peer, event);
-    };
+ // peer.connect();
 
-    connection.onremovestream = function(event) {
-      fire('peer remove_stream', peer, event);
-    };
 
-    connection.oniceconnectionstatechange = function(event) {
-      fire('peer ice_connection_state_change', peer, event);
-    };
+  // var streams = [],
+  //     channels = [];
 
-    connection.ondatachannel = function(event) {
-      var channel = event.channel;
+  // var peer = {
+  //   id: id,
+  //   channels: channels,
+  //   streams: streams,
+  //   connect: function() { 
+  //     peer.peerConnection = createConnection(channels);
+  //   },
+  //   createChannel: function(label, options, handlers) {
+  //     var channel = peer.peerConnection.createDataChannel(label, options);
+
+  //     attachToChannel(channels, channel, handlers);
+
+  //     return channel;
+  //   }
+  // };
+
+  // function createConnection(channels) {
+  //   var connection = new RTCPeerConnection({
+  //     iceServers: [{url: 'stun:stun.l.google.com:19302'}]
+  //   });
+    
+  //   connection.onnegotiationneeded = function(event) {
+  //     sendOffer();
+  //     fire ('peer negotiation_needed', peer, event);
+  //   };
+
+  //   connection.onicecandidate = function(event) {
+  //     var candidate = event.candidate;
+
+  //     if (candidate) {
+  //       emit('ice_candidate', {
+  //         peerID: id,
+  //         label: candidate.sdpMLineIndex,
+  //         candidate: candidate.candidate
+  //       });
+
+  //       fire('peer ice_candidate', peer, candidate);
+  //     }
+  //   };
+
+  //   connection.addEventListener('icecandidate', function(e) {
+  //     console.log('###############', e);
+  //   })
+
+  //   connection.onsignalingstatechange = function(event) {
+  //     fire('peer signaling_state_change', peer, event);
+  //   };
+
+  //   connection.onaddstream = function(event) {
+  //     fire('peer add_stream', peer, event);
+  //   };
+
+  //   connection.onremovestream = function(event) {
+  //     fire('peer remove_stream', peer, event);
+  //   };
+
+  //   connection.oniceconnectionstatechange = function(event) {
+  //     fire('peer ice_connection_state_change', peer, event);
+  //   };
+
+  //   connection.ondatachannel = function(event) {
+  //     var channel = event.channel;
       
-      // Override these functions when you get passed 'handlers'
-      var handlers = {
-        open: function() {},
-        close: function() {},
-        message: function(message) {console.log(message);},
-        error: function(error) {}
-      };
+  //     // Override these functions when you get passed 'handlers'
+  //     var handlers = {
+  //       open: function() {},
+  //       close: function() {},
+  //       message: function(message) {console.log(message);},
+  //       error: function(error) {}
+  //     };
 
-      attachToChannel(channels, channel, handlers);
+  //     attachToChannel(channels, channel, handlers);
 
-      fire('peer data_channel connected', peer, channel, handlers);
-    };
+  //     fire('peer data_channel connected', peer, channel, handlers);
+  //   };
 
-    return connection;
-  };
+  //   return connection;
+  // };
 
   function attachToChannel(channels, channel, handlers) {
     var label = channel.label;
@@ -139,28 +179,28 @@ function createPeer(id, emit, fire) {
       (handlers[name] || function () {})(arg1, arg2);
     };
 
-    channel.onopen = function() {
+    channel.addEventListener('open', function() {
       call('open', channel);
       fire('peer data_channel open', peer, channel);
-    };
+    });
 
-    channel.onclose = function() {
+    channel.addEventListener('close', function() {
       _.remove(channels, function(c) { return c.label === label; });
       delete channels[label];
 
       call('close', channel);
       fire('peer data_channel close', peer, channel);
-    };
+    });
 
-    channel.onmessage = function(message) {
+    channel.addEventListener('message', function(message) {
       call('message', channel, message.data);
       fire('peer data_channel message', peer, channel, message);
-    };
+    });
 
-    channel.onerror = function(error) {
+    channel.addEventListener('error', function(error) {
       call('error', channel, error);
       fire('peer data_channel error', peer, channel, error);
-    };
+    });
 
     channels.push(channel);
     channels[label] = channel;
@@ -169,7 +209,7 @@ function createPeer(id, emit, fire) {
   };
 
   function sendOffer() {
-    var connection = peer.peerConnection;
+    var connection = peer.connection;
 
     connection.createOffer(function(offer) {
       connection.setLocalDescription(offer, function() {
@@ -224,7 +264,7 @@ function connectToSignal(server, onReady) {
 
       function removePeerByID(id) {
         var peer = getPeer(id);
-        if (peer.peerConnection) peer.peerConnection.close();
+        peer.close();
         _.remove(peers, function(peer) { return peer.id === id; });
         delete peersHash[id];
         fire('peer removed', peer);
@@ -232,7 +272,7 @@ function connectToSignal(server, onReady) {
 
       function addIceCandidate(peerID, candidate) {
         var peer = getPeer(peerID),
-            connection = peer.peerConnection;
+            connection = peer.connection;
 
         connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
           fire('peer ice_candidate', peer, candidate);
@@ -243,7 +283,7 @@ function connectToSignal(server, onReady) {
 
       function receiveAnswer(peerID, answer) {
         var peer = getPeer(peerID),
-            connection = peer.peerConnection;
+            connection = peer.connection;
 
         connection.setRemoteDescription(new RTCSessionDescription(answer));
         fire('peer receive answer', peer, answer);
@@ -251,11 +291,11 @@ function connectToSignal(server, onReady) {
 
       function sendAnswer(peerID, offer) {
         var peer = getPeer(peerID),
-            connection = peer.peerConnection;
+            connection = peer.connection;
 
         if (connection == null) {
           peer.connect();
-          connection = peer.peerConnection;
+          connection = peer.connection;
         }      
         
         connection.setRemoteDescription(new RTCSessionDescription(offer), function() {

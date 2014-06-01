@@ -29,14 +29,16 @@ module.exports = function commandCenterDirective() {
         return {
           open: function(channel) { },
           close: function(channel) { },
-          message: function(channel, message) {
+          message: function(channel, event) {
+            var message = event.data;
+
             if (message == room) {
               var measurements = [{
                 time: new Date().getTime(),
                 transferred: 0
               }];
 
-              sendFile(channel, host.file, function(transfer) {
+              channel.transfer = sendFile(channel.channel, host.file, function(transfer) {
                 var lastMeasurement = measurements[0],
                     changed = transfer.transferred > lastMeasurement.transferred;
 
@@ -70,6 +72,85 @@ module.exports = function commandCenterDirective() {
         }
       });
 
+      function fileReceiveHandlers() {
+        var queueApply = _.throttle(function() {
+          $scope.$apply();
+        }, 100);
+
+        function receiveHeader(channel, message) {
+          var parts = message.toString().split(';');
+
+          if (parts.length != 3) throw Error('Got bad file transfer header');
+
+          var byteLength = parseInt(parts[0]),
+              name = parts[1],
+              type = parts[2];
+
+          var stats = {
+            transferred: 0,
+            total: byteLength,
+            speed: 0
+          };
+
+          var transfer = channel.transfer = {
+            byteLength: byteLength,
+            name: name,
+            type: type,
+            transferred: 0,
+            speed: 0,
+            position: 0,
+            buffers: [],
+            start: new Date().getTime()
+          };
+
+          messageHandler = function(channel, message) {
+            var now = new Date().getTime();
+
+            transfer.buffers.push(message);
+
+            transfer.position += message.byteLength || message.size; // Firefox uses 'size'
+
+            transfer.transferred = transfer.position;
+            transfer.total = transfer.byteLength;
+            transfer.progress = transfer.transferred / transfer.total;
+            transfer.speed = transfer.position / (now - transfer.start) * 1000;
+      
+            if (transfer.position == transfer.byteLength) {
+              var blob = new Blob(transfer.buffers, {type: transfer.type});
+
+              $scope.file = blob;
+
+              // var a = document.createElement('a');
+              // document.body.appendChild(a); // Firefox apparently needs this
+              // a.href = window.URL.createObjectURL(blob);
+              // a.download = transfer.name;
+              // a.click();
+              // a.remove();
+            }
+
+
+  /* possible to use with unreliable transport 
+            acknowledgedChunkSeq
+
+            for (var seq = acknowledgedChunkSeq + 1; seq < chunkSeq; seq++) {
+              missingChunks[seq] = seq;
+            }
+  */
+
+            queueApply();
+          };
+
+          queueApply();
+        }
+
+        var messageHandler = receiveHeader;
+
+        return {
+          open: (channel) => channel.channel.send(room),
+          message: (channel, event) => messageHandler(channel, event.data)
+        };
+      };
+
       if (host.file == null) {
         (function attachBlastDoor() {
           var handlers = {
@@ -99,14 +180,14 @@ module.exports = function commandCenterDirective() {
             },
             'peer signaling_state_change': function(peer, event) {
               if (peer.id == room) {
-                var connection = peer.peerConnection;
+                var connection = peer.connection;
                 $scope.addBlastDoorsMessage('Signalling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
               }
               $scope.$apply();
             },
             'peer ice_connection_state_change': function(peer, event) {
               if (peer.id == room) {
-                var state = peer.peerConnection.iceConnectionState;
+                var state = peer.connection.iceConnectionState;
                 $scope.addBlastDoorsMessage('ICE: ' + state);
                 if (state == 'connected') {
                   setTimeout(function() {
@@ -141,11 +222,17 @@ module.exports = function commandCenterDirective() {
           if (signal.myID == room) {
             peer.connect();
             $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
-            var channel = peer.createChannel('instafile.io', {}, fileServeHandlers());
+            var channel = peer.addChannel('instafile.io', {}, fileServeHandlers());
           }
 
           if (peer.id == room) {
             $scope.addBlastDoorsMessage('Peer Alive.........Connecting');
+
+            peer.on('channel added', (channel) => {
+              console.log('channel added');
+              channel.on(fileReceiveHandlers());
+              $scope.$apply();
+            });
           }
 
           $scope.$apply();
@@ -175,15 +262,14 @@ module.exports = function commandCenterDirective() {
         },
         'peer signaling_state_change': function(peer, event) {
           console.log('peer signaling_state_change', arguments);
-          $scope.signalingState = peer.peerConnection.signalingState;
+          $scope.signalingState = peer.connection.signalingState;
           $scope.$apply();
         },
         'peer ice_connection_state_change': function(peer, event) {
-          $scope.iceConnectionState = peer.peerConnection.iceConnectionState;
+          $scope.iceConnectionState = peer.connection.iceConnectionState;
           $scope.$apply();
         },
         'peer data_channel connected': function(peer, channel, handlers) {
-          attachChannel(channel, handlers);
           console.log('peer data_channel connected', peer, channel, handlers);
         },
         'peer error send offer': function(peer, error, offer) {
@@ -197,91 +283,6 @@ module.exports = function commandCenterDirective() {
         }
       });
 
-      function attachChannel(channel, handlers) {
-        var queueApply = _.throttle(function() {
-          $scope.$apply();
-        }, 100);
-
-        handlers.open = function(channel) {
-          // Request file
-          channel.send(room);
-        };
-
-        handlers.close = function(channel) {
-
-        };
-
-        handlers.message = function(channel, message) {
-          var parts = message.toString().split(';');
-
-          if (parts.length != 3) throw Error('Got bad file transfer header');
-
-          var byteLength = parseInt(parts[0]),
-              name = parts[1],
-              type = parts[2];
-
-          var stats = {
-            transferred: 0,
-            total: byteLength,
-            speed: 0
-          };
-
-          var transfer = channel.transfer = {
-            byteLength: byteLength,
-            name: name,
-            type: type,
-            transferred: 0,
-            speed: 0,
-            position: 0,
-            buffers: [],
-            start: new Date().getTime()
-          };
-
-          // Note, this reassigns the current function (yes, the one that you are in, right now!)
-          handlers.message = function(channel, message) {
-            var now = new Date().getTime();
-
-            transfer.buffers.push(message);
-
-            transfer.position += message.byteLength || message.size; // Firefox uses 'size'
-
-            transfer.transferred = transfer.position;
-            transfer.total = transfer.byteLength;
-            transfer.progress = transfer.transferred / transfer.total;
-            transfer.speed = transfer.position / (now - transfer.start) * 1000;
-      
-            if (transfer.position == transfer.byteLength) {
-              var blob = new Blob(transfer.buffers, {type: transfer.type});
-
-              $scope.file = blob;
-
-              // var a = document.createElement('a');
-              // document.body.appendChild(a); // Firefox apparently needs this
-              // a.href = window.URL.createObjectURL(blob);
-              // a.download = transfer.name;
-              // a.click();
-              // a.remove();
-            }
-            queueApply();
-          };
-
-          queueApply();
-
-/* possible to use with unreliable transport 
-          acknowledgedChunkSeq
-
-          for (var seq = acknowledgedChunkSeq + 1; seq < chunkSeq; seq++) {
-            missingChunks[seq] = seq;
-          }
-*/
-        };
-
-        handlers.error = function(channel, error) {
-
-        };
-
-        $scope.$apply();
-      };
 
       var fileBuffers = {};
       function getFileBuffer(file, callback) {
@@ -304,7 +305,7 @@ module.exports = function commandCenterDirective() {
       function sendFile(channel, file, progress) {
         var chunkSize = 64 * 1024,
             reader = new FileReader(),
-            stats = {};
+            transfer = channel.transfer = {};
 
         getFileBuffer(file, function(buffer) {
           channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
@@ -314,8 +315,7 @@ module.exports = function commandCenterDirective() {
               backoff = 0,
               lastIterations = 1,
               startTime = new Date().getTime(),
-              maxBufferAmount = Number.POSITIVE_INFINITY,
-              transfer = channel.transfer = {};
+              maxBufferAmount = Number.POSITIVE_INFINITY;
 
           transfer.startTime = startTime;
           transfer.transferred = 0;
@@ -383,7 +383,7 @@ module.exports = function commandCenterDirective() {
           send();
         });
 
-        return stats;
+        return transfer;
       };
 
       $scope.transfers = [];
