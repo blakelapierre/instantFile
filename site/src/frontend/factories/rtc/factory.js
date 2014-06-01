@@ -202,7 +202,7 @@ function connectToSignal(server, onReady) {
         'peer list': (data) => _.each(data.peerIDs, addPeer),
         'peer join': (id) => addPeer(id),
         'peer leave': (id) => removePeerByID(id),
-        'peer ice_candidate', (data) => addIceCandidate(data.peerID, data),
+        'peer ice_candidate': (data) => addIceCandidate(data.peerID, data),
         'peer offer': (data) => sendAnswer(data.peerID, peer.offer),
         'peer answer': (data) => receiveAnswer(data.peerID, data.answer)
       }, (handler, name) => socket.on(name, handler));
