@@ -1,3 +1,5 @@
+// Returns a map of handlers to be applied to a Channel
+
 module.exports = function fileReceiveHandlers() {
   return function(room, progressFn) {
     var messageHandler = receiveHeader;

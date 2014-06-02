@@ -47,15 +47,12 @@ module.exports = function commandCenterDirective() {
             };
           }
 
-          var handlers = {
+          signal.on({
             'peer ice_candidate': ifHost(() => $scope.addBlastDoorsMessage('ICE Candidate Received')),
             'peer receive offer': ifHost(() => $scope.addBlastDoorsMessage('Offer Received')),
             'peer receive answer': ifHost(() => $scope.addBlastDoorsMessage('Answer Received')),
             'peer send answer': ifHost(() => $scope.addBlastDoorsMessage('Answer Sent')),
-            'peer signaling_state_change': ifHost((peer) => {  
-              var connection = peer.connection;
-              $scope.addBlastDoorsMessage('Signaling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
-            }),
+            'peer signaling_state_change': ifHost((peer) => $scope.addBlastDoorsMessage('Signaling: ' + peer.connection.signalingState)),
             'peer ice_connection_state_change': ifHost((peer) => {
               var state = peer.connection.iceConnectionState;
               $scope.addBlastDoorsMessage('ICE: ' + state);
@@ -66,8 +63,7 @@ module.exports = function commandCenterDirective() {
                 }, 1000);
               }
             })
-          };
-          signal.on(handlers);
+          });
         })();
       }
 
@@ -114,22 +110,18 @@ module.exports = function commandCenterDirective() {
         },
         'peer removed': (peer) => {
           $scope.oldPeers.push(peer);
-          _.remove($scope.peers, function(p) { return p == peer; });
-          _.remove($scope.connectedPeers, function(p) { return p == peer; });
+          _.remove($scope.peers, (p) => { return p == peer; });
+          _.remove($scope.connectedPeers, (p) => { return p == peer; });
           $scope.$apply();
         },
-        'peer ice_candidate accepted': function(peer, candidate) {
-        },
+        'peer ice_candidate accepted': (peer, candidate) => { },
         'peer receive offer': (peer, offer) => {
           peer.status = 'Received Offer';
           $scope.$apply();
         },
-        'peer receive answer': function(peer, answer) {
-        },
-        'peer send offer': function(peer, offer) {
-        },
-        'peer send answer': function(peer, offer) {
-        },
+        'peer receive answer': (peer, answer) => { },
+        'peer send offer': (peer, offer) => { },
+        'peer send answer': (peer, offer) => { },
         'peer signaling_state_change': (peer, event) => {
           $scope.signalingState = peer.connection.signalingState;
           $scope.$apply();
@@ -138,14 +130,10 @@ module.exports = function commandCenterDirective() {
           $scope.iceConnectionState = peer.connection.iceConnectionState;
           $scope.$apply();
         },
-        'peer data_channel connected': function(peer, channel, handlers) {
-        },
-        'peer error send offer': function(peer, error, offer) {
-        },
-        'peer error send answer': function(peer, error, answer) {
-        },
-        'peer error set_remote_description': function(peer, error) {
-        }
+        'peer data_channel connected': (peer, channel, handlers) => { },
+        'peer error send offer': (peer, error, offer) => { },
+        'peer error send answer': (peer, error, answer) => { },
+        'peer error set_remote_description': (peer, error) => { }
       });
 
       $scope.transfers = [];
