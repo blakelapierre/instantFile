@@ -32,6 +32,10 @@ module.exports = function commandCenterDirective() {
 
       signal.joinRoom(room);
 
+      var queueApply = _.throttle(function() {
+        $scope.$apply();
+      }, 100);
+
       if (host.file == null) {
         (function attachBlastDoor() {
           function ifHost(fn) {
@@ -95,8 +99,10 @@ module.exports = function commandCenterDirective() {
 
             peer.on({
               'channel added': (channel) => {
-                channel.on(fileReceiveHandlers($scope, room));
-                $scope.$apply();
+                channel.on(fileReceiveHandlers(room, (transfer) => {
+                  $scope.file = transfer.file;
+                  queueApply();
+                }));
               },
               'channel removed': (channel) => {
                 $scope.$apply();
