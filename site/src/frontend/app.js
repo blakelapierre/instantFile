@@ -19,6 +19,10 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   .factory('host',  require('./factories/host/factory'))
   .factory('rtc',   require('./factories/rtc/factory'))
 
+  .factory('getFileBuffer',         require('./factories/rtc/getFileBuffer/factory'))
+  .factory('fileReceiveHandlers',   require('./factories/rtc/fileReceiveHandlers/factory'))
+  .factory('fileServeHandlers',     require('./factories/rtc/fileServeHandlers/factory'))
+
   .filter('transferRate',  require('./directives/util/transferRate/filter'))
   
   .config(function($routeProvider, $compileProvider) {

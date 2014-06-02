@@ -10,7 +10,14 @@ module.exports = function commandCenterDirective() {
       $scope.openBlastDoors = instantFile.openBlastDoors;
       $scope.closeBlastDoors = instantFile.closeBlastDoors;
     },
-    controller: ['$scope', '$location', 'host', 'rtc', function($scope, $location, host, rtc) {
+    controller: [ '$scope',
+                  '$location', 
+                  'host', 
+                  'rtc', 
+                  'fileServeHandlers', 
+                  'fileReceiveHandlers', 
+      function($scope, $location, host, rtc, fileServeHandlers, fileReceiveHandlers) {
+
       var room = $location.path().substr(1),
           roomManager = {},
           signal = rtc.connectToSignal('https://' + window.location.host);
@@ -24,136 +31,6 @@ module.exports = function commandCenterDirective() {
       $scope.iceConnectionState = 'no peers';
 
       signal.joinRoom(room);
-
-      var fileServeHandlers = (function() {
-        var queueApply = _.throttle(function() {
-          $scope.$apply();
-        }, 100);
-
-        return {
-          open: function(channel) { },
-          close: function(channel) { },
-          message: function(channel, event) {
-            var message = event.data;
-
-            if (message == room) {
-              var measurements = [{
-                time: new Date().getTime(),
-                transferred: 0
-              }];
-
-              channel.transfer = sendFile(channel.channel, host.file, function(transfer) {
-                var lastMeasurement = measurements[0],
-                    changed = transfer.transferred > lastMeasurement.transferred;
-
-                if (changed) {
-                  var measurement = {
-                    time: transfer.lastSend,
-                    transferred: transfer.transferred
-                  };
-                  measurements.unshift(measurement);
-
-                  var cutoff = measurement.time - 1000, // One second
-                      oldest = measurements[measurements.length - 1],
-                      secondOldest = oldest;
-
-                  while (measurements.length > 2 && cutoff > secondOldest.time) {
-                    oldest = secondOldest;
-                    secondOldest = measurements.pop();
-                  }
-
-                  var dt = measurement.time - oldest.time,
-                      speed = 1000 * (measurement.transferred - oldest.transferred) / dt;
-
-                  transfer.speed = speed;
-                }
-
-                queueApply();
-              });
-            }
-          },
-          error: function(channel, error) {}
-        }
-      });
-
-      function fileReceiveHandlers() {
-        var queueApply = _.throttle(function() {
-          $scope.$apply();
-        }, 100);
-
-        function receiveHeader(channel, message) {
-          var parts = message.toString().split(';');
-
-          if (parts.length != 3) throw Error('Got bad file transfer header');
-
-          var byteLength = parseInt(parts[0]),
-              name = parts[1],
-              type = parts[2];
-
-          var stats = {
-            transferred: 0,
-            total: byteLength,
-            speed: 0
-          };
-
-          var transfer = channel.transfer = {
-            byteLength: byteLength,
-            name: name,
-            type: type,
-            transferred: 0,
-            speed: 0,
-            position: 0,
-            buffers: [],
-            start: new Date().getTime()
-          };
-
-          messageHandler = function(channel, message) {
-            var now = new Date().getTime();
-
-            transfer.buffers.push(message);
-
-            transfer.position += message.byteLength || message.size; // Firefox uses 'size'
-
-            transfer.transferred = transfer.position;
-            transfer.total = transfer.byteLength;
-            transfer.progress = transfer.transferred / transfer.total;
-            transfer.speed = transfer.position / (now - transfer.start) * 1000;
-      
-            if (transfer.position == transfer.byteLength) {
-              var blob = new Blob(transfer.buffers, {type: transfer.type});
-
-              $scope.file = blob;
-
-              // var a = document.createElement('a');
-              // document.body.appendChild(a); // Firefox apparently needs this
-              // a.href = window.URL.createObjectURL(blob);
-              // a.download = transfer.name;
-              // a.click();
-              // a.remove();
-            }
-
-
-  /* possible to use with unreliable transport 
-            acknowledgedChunkSeq
-
-            for (var seq = acknowledgedChunkSeq + 1; seq < chunkSeq; seq++) {
-              missingChunks[seq] = seq;
-            }
-  */
-
-            queueApply();
-          };
-
-          queueApply();
-        }
-
-        var messageHandler = receiveHeader;
-
-        return {
-          open: (channel) => channel.channel.send(room),
-          message: (channel, event) => messageHandler(channel, event.data)
-        };
-      };
 
       if (host.file == null) {
         (function attachBlastDoor() {
@@ -229,7 +106,7 @@ module.exports = function commandCenterDirective() {
           if (signal.myID == room) {
             peer.connect();
             $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
-            var channel = peer.addChannel('instafile.io', {}, fileServeHandlers());
+            var channel = peer.addChannel('instafile.io', {}, fileServeHandlers($scope, host, room));
           }
 
           if (peer.id == room) {
@@ -238,7 +115,7 @@ module.exports = function commandCenterDirective() {
             peer.on({
               'channel added': (channel) => {
                 console.log('channel added', channel);
-                channel.on(fileReceiveHandlers());
+                channel.on(fileReceiveHandlers($scope, room));
                 $scope.$apply();
               },
               'channel removed': (channel) => {
@@ -295,111 +172,6 @@ module.exports = function commandCenterDirective() {
           console.log('peer error set_remote_description', error);
         }
       });
-
-
-      var fileBuffers = {};
-      function getFileBuffer(file, callback) {
-        var buffer = fileBuffers[file];
-        if (buffer) callback(buffer);
-        else {
-          var reader = new FileReader();
-          
-          reader.onload = function(e) {
-            var buffer = e.target.result;
-
-            fileBuffers[file] = buffer;
-            callback(buffer);
-          };
-
-          reader.readAsArrayBuffer(file);
-        }
-      };
-
-      function sendFile(channel, file, progress) {
-        var chunkSize = 64 * 1024,
-            reader = new FileReader(),
-            transfer = channel.transfer = {};
-
-        getFileBuffer(file, function(buffer) {
-          channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
-
-          var byteLength = buffer.byteLength,
-              offset = 0,
-              backoff = 0,
-              lastIterations = 1,
-              startTime = new Date().getTime(),
-              maxBufferAmount = Number.POSITIVE_INFINITY;
-
-          transfer.startTime = startTime;
-          transfer.transferred = 0;
-          transfer.total = byteLength;
-          transfer.speed = 0;
-
-          console.log(channel);
-
-          function send() {
-            if (channel.readyState != 'open') return;
-
-            var buffered = channel.bufferedAmount;
-
-            // I'm not sure lastIterations really does what I originally thought it would do.
-            var toSend = Math.min(lastIterations * chunkSize, maxBufferAmount) - buffered;
-
-            var iterations = Math.ceil(toSend / chunkSize);
-
-            var now = new Date().getTime();
-            // Is there a better way to do this then to just run some
-            // arbitrary number of iterations each round?
-            // Maybe watch the socket's buffer size?
-            for (var i = 0; i < iterations; i++) {
-              var size = Math.min(chunkSize, byteLength - offset);
-
-              if (size > 0) {
-                var chunk = buffer.slice(offset, offset + size);
-
-                try {
-                  channel.send(chunk);
-
-                  offset += size;
-                  backoff = 0;
-                } catch(e) {
-                  console.log(e);
-                  backoff += 100;
-                  
-                  maxBufferAmount = buffered;
-
-                  if (maxBufferAmount == 0) maxBufferAmount = Number.POSITIVE_INFINITY;
-
-                  lastIterations--;
-                  break; // get me out of this for loop!
-                }
-              }
-            }
-
-            if (backoff == 0) lastIterations++;
-
-            var transferred = offset - buffered;
-
-            transfer.transferred = transferred;
-            transfer.progress = transferred / transfer.total;
-            transfer.backoff = backoff;
-            transfer.lastSend = now;
-            transfer.buffered = buffered;
-            transfer.maxBuffered = maxBufferAmount;
-
-            if (progress) progress(transfer);
-
-            if (transferred < byteLength) {
-              if (backoff > 0) setTimeout(send, backoff);
-              else setTimeout(send, 0);
-            }
-          };
-
-          send();
-        });
-
-        return transfer;
-      };
 
       $scope.transfers = [];
       $scope.file = host.file;

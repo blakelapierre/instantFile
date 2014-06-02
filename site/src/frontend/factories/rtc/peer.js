@@ -1,7 +1,5 @@
 import {_} from 'lodash';
 
-import {Emitter} from './../../lib/emitter';
-
 import {Channel} from './channel';
 
 
