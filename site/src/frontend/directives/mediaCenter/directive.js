@@ -15,6 +15,15 @@ module.exports = ['$sce', function($sce) {
       $scope.videoLoaded = function(event) {
         console.log('loaded', event);
       };
+
+      $scope.saveFile = function() {
+        var a = document.createElement('a');
+        document.body.appendChild(a); // Firefox apparently needs this
+        a.href = window.URL.createObjectURL($scope.file);
+        a.download = $scope.file.name;
+        a.click();
+        a.remove();
+      };
     },
     controller: function($scope) {
       $scope.$watch('file', function(file) {

@@ -4,7 +4,6 @@ module.exports = function() {
     template: require('./template.html'),
     require: '^instantFile',
     link: function($scope, element, attributes, instantFile) {
-      console.log(instantFile)
       // maybe extract this out to a factory?
       setTimeout(function() {
         instantFile.openBlastDoors();

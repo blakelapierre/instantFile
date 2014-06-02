@@ -150,7 +150,6 @@ module.exports = function(io) {
 
   io.sockets.on('connection', function(socket) {
     //socket.peerID = uuid.v4();
-    console.log(socket);
     socket.emit('your_id', socket.id);
 
     socket.rooms = new HashList('_self');
