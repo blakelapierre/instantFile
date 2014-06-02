@@ -62,7 +62,7 @@ module.exports = function commandCenterDirective() {
             'peer signaling_state_change': function(peer, event) {
               if (peer.id == room) {
                 var connection = peer.connection;
-                $scope.addBlastDoorsMessage('Signalling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
+                $scope.addBlastDoorsMessage('Signaling: ' + connection.signalingState + ', ICE: ' + connection.iceConnectionState);
               }
               $scope.$apply();
             },
