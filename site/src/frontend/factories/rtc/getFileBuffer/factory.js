@@ -2,19 +2,34 @@ module.exports = function() {
   var fileBuffers = {};
 
   return function getFileBuffer(file, callback) {
-    var buffer = fileBuffers[file];
-    if (buffer) callback(buffer);
-    else {
+    var container = fileBuffers[file];
+    if (container == null) {
       var reader = new FileReader();
       
-      reader.onload = function(e) {
-        var buffer = e.target.result;
-
-        fileBuffers[file] = buffer;
-        callback(buffer);
+      container = fileBuffers[file] = {
+        referenceCount: 0
       };
 
-      reader.readAsArrayBuffer(file);
+      container.bufferPromise = new Promise(function(resolve, reject) {
+        reader.onload = function(e) {
+          var buffer = e.target.result;
+          container.buffer = buffer;
+          resolve(buffer);
+        };
+
+        // todo: error handling?
+
+        reader.readAsArrayBuffer(file);
+      });
     }
+
+    container.referenceCount++;
+
+    container.bufferPromise.then(() => callback(container.buffer));
+
+    return () => {
+      container.referenceCount--;
+      if (container.referenceCount == 0) delete fileBuffers[file];
+    };
   };
 };

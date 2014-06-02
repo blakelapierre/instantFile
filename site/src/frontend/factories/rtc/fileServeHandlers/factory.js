@@ -6,7 +6,7 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
         reader = new FileReader(),
         transfer = channel.transfer = {};
 
-    getFileBuffer(file, function(buffer) {
+    var doneWithFile = getFileBuffer(file, function(buffer) {
       channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
 
       var byteLength = buffer.byteLength,
