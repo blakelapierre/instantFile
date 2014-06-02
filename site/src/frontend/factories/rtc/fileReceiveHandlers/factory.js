@@ -1,5 +1,3 @@
-import {_} from 'lodash';
-
 module.exports = function fileReceiveHandlers() {
   return function(room, progressFn) {
     var messageHandler = receiveHeader;
@@ -21,7 +19,7 @@ module.exports = function fileReceiveHandlers() {
         speed: 0,
         position: 0,
         buffers: new Array(Math.ceil(byteLength / (64 * 1024))),
-        messageCount: 0,
+        pieceCount: 0,
         start: new Date().getTime()
       };
 
@@ -34,7 +32,7 @@ module.exports = function fileReceiveHandlers() {
       return function receiveData(channel, message) {
         var now = new Date().getTime();
 
-        transfer.buffers[transfer.messageCount++] = message;
+        transfer.buffers[transfer.pieceCount++] = message;
 
         transfer.position += message.byteLength || message.size; // Firefox uses 'size'
 
@@ -46,18 +44,11 @@ module.exports = function fileReceiveHandlers() {
         if (transfer.position == transfer.byteLength) {
           var blob = new Blob(transfer.buffers, {type: transfer.type});
           blob.name = transfer.name;
-          
+
           transfer.file = blob;
         }
 
         return transfer;
-    /* possible to use with unreliable transport 
-        acknowledgedChunkSeq
-
-        for (var seq = acknowledgedChunkSeq + 1; seq < chunkSeq; seq++) {
-          missingChunks[seq] = seq;
-        }
-    */
       };
     };
 
