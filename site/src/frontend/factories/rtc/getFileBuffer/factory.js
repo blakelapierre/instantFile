@@ -4,10 +4,10 @@ function on(obj, listeners) {
   }
 }
 
-module.exports = function() {
+module.exports = () => {
   var fileBuffers = {};
 
-  return function getFileBuffer(file, callback) {
+  return (file, callback) => {
     var container = fileBuffers[file];
     if (container == null) {
       var reader = new FileReader();
