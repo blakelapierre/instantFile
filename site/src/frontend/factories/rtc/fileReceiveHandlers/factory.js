@@ -1,4 +1,6 @@
 // Returns a map of handlers to be applied to a Channel
+// 
+// This accepts files transferred using `fileServeHandlers`
 
 module.exports = function fileReceiveHandlers() {
   return function(room, progressFn) {

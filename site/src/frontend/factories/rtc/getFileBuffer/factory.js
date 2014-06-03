@@ -1,3 +1,9 @@
+function on(obj, listeners) {
+  for (var eventName in listeners) {
+    obj.addEventListener(eventName, listeners[eventName]);
+  }
+}
+
 module.exports = function() {
   var fileBuffers = {};
 
@@ -10,14 +16,20 @@ module.exports = function() {
         referenceCount: 0
       };
 
-      container.bufferPromise = new Promise(function(resolve, reject) {
-        reader.onload = function(e) {
-          var buffer = e.target.result;
-          container.buffer = buffer;
-          resolve(buffer);
-        };
+      container.bufferPromise = new Promise((resolve, reject) => {
+        on(reader, {
+          'load': e => {
+            var buffer = e.target.result;
+            container.buffer = buffer;
+            resolve(buffer);
+          },
+          'abort': reject,
+          'error': reject
+        });
 
-        // todo: error handling?
+        //onloadstart
+        //onloadend
+        //onprogress
 
         reader.readAsArrayBuffer(file);
       });
@@ -25,7 +37,11 @@ module.exports = function() {
 
     container.referenceCount++;
 
-    container.bufferPromise.then(() => callback(container.buffer));
+    container
+      .bufferPromise
+      .then(
+        (buffer) => callback(buffer),
+        (error) => console.log('Error reading file', error));
 
     return () => {
       container.referenceCount--;
