@@ -3,7 +3,6 @@ module.exports = function(config, callback) {
       http = require('http'),
       path = require('path'),
       express = require('express'),
-      webRTC = require('./lib/webrtc.io'),
       io = require('socket.io'),
       signal = require('./signal'),
       app = express();
