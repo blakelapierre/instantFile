@@ -107,6 +107,7 @@ module.exports = function commandCenterDirective() {
               'channel added': (channel) => {
                 channel.on(fileReceiveHandlers(room, (transfer) => {
                   $scope.file = transfer.file;
+                  $scope.streamSrc = transfer.src;
                   $scope.isTransferring = transfer.progress < 1;
                   $scope.currentTransfer = transfer;
                   queueApply();

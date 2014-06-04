@@ -2,7 +2,7 @@
 // 
 // This accepts files transferred using `fileServeHandlers`
 
-module.exports = function fileReceiveHandlers() {
+module.exports = ['$sce', function fileReceiveHandlers($sce) {
   return function(room, progressFn) {
     var messageHandler = receiveHeader;
 
@@ -24,9 +24,34 @@ module.exports = function fileReceiveHandlers() {
         position: 0,
         buffers: new Array(Math.ceil(byteLength / (64 * 1024))),
         pieceCount: 0,
+        streamPiece: 0,
         start: new Date().getTime()
       };
 
+      if (/video\/.*/.test(transfer.type)) {
+        var mediaSource = new MediaSource();
+
+        transfer.mediaSource = mediaSource;
+
+        console.log(transfer.mediaSource);
+
+        transfer.src = $sce.trustAsResourceUrl(window.URL.createObjectURL(mediaSource));
+
+        mediaSource.addEventListener('sourceopen', function() {
+          var receiver = mediaSource.addSourceBuffer(transfer.type + '; codecs="vorbis,vp8"');
+          transfer.receiver = receiver;
+          console.log(transfer.src);
+
+          receiver.addEventListener('updateend', function(event) {
+            var sourceBuffer = event.target;
+
+            if (transfer.pieceCount > transfer.streamPiece + 1) sourceBuffer.appendBuffer(transfer.buffers[transfer.streamPiece++]);
+          });
+
+          if (transfer.pieceCount > 0) receiver.appendBuffer(transfer.buffers[transfer.streamPiece++]);
+        });
+      }
+      
       messageHandler = createReceiveData(transfer); // Here we pass control of the rest of the transfer to receiveData
 
       return transfer;
@@ -44,6 +69,8 @@ module.exports = function fileReceiveHandlers() {
         transfer.total = transfer.byteLength;
         transfer.progress = transfer.transferred / transfer.total;
         transfer.speed = transfer.position / (now - transfer.start) * 1000;
+
+        if (transfer.receiver && !transfer.receiver.updating && transfer.pieceCount > transfer.streamPiece + 1) transfer.receiver.appendBuffer(transfer.buffers[transfer.streamPiece++]);
 
         if (transfer.position == transfer.byteLength) {
           var blob = new Blob(transfer.buffers, {type: transfer.type});
@@ -64,4 +91,4 @@ module.exports = function fileReceiveHandlers() {
       }
     };
   };
-};
+}];

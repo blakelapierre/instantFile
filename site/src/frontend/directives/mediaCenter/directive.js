@@ -6,7 +6,8 @@ module.exports = ['$sce', function($sce) {
       file: '=',
       isTransferring: '=',
       currentTransfer: '=',
-      isClient: '='
+      isClient: '=',
+      streamSrc: '='
     },
     link: function($scope, element, attributes) {
       var video = element.find('video');

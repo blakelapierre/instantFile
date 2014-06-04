@@ -8,6 +8,8 @@
   </div>
 </div>
 
+<video src="{{streamSrc}}" class="preview" controls></video>
+
 <img ng-if="type == 'image'" class="preview" ng-src="{{src}}" />
 <video ng-if="type == 'video'" class="preview" ng-src="{{src}}" onloadeddata="videoLoaded($event)" loadedmetadata="videoLoaded($event)" controls></video>
 <audio ng-if="type == 'audio'" class="preview" ng-src="{{src}}" controls></audio>
