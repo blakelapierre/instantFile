@@ -7,92 +7,118 @@
   }
 }
 
+@keyframes flip-command-center {
+  0% {
+    transform: translateZ(-1000px) rotateY(180deg);
+  }
+  100% {
+    transform: translateZ(0px) rotateY(0deg);
+  }
+}
+
 command-center {
   position: absolute;
   width: 100%;
   height: 100%;
+
+  perspective: 500px;
 
   .container {
     position: absolute;
     height: 100%;
     width: 100%;
 
-    .content {
-      position: absolute;
+    background-color: #000;
+
+    .inner-container {
       height: 100%;
       width: 100%;
 
-      padding: 1em 0;
+
+      transform: translateZ(1px);
+
+      .content {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+
+        padding: 1em 0;
+      }
+
+      .top-bar {
+        position: absolute;
+        height: 1em;
+        width: 100%;
+
+        display: table;
+
+        background-color: #333;
+
+        color: #0f0;
+
+        text-shadow: 0 0 5px #0f0;
+
+        span {
+          display: table-cell;
+          width: 25%;
+
+          text-align: center;
+        }
+
+        span:first-child {
+          text-align: left;
+        }
+
+        span:last-child {
+          text-align: right;
+        }
+
+        a {
+          text-decoration: none;
+        }
+
+        a:visited {
+          color: #0f0;
+        }
+      }
+
+      .bottom-bar {
+        position: absolute;
+        height: 2em;
+        width: 100%;
+
+        display: table;
+
+        bottom: 0%;
+        
+        background-color: #fff;
+
+        color: #000;
+
+        div {
+          display: table-cell;
+        }
+
+        .input {
+          input {
+            border: none;
+            width: 100%;
+            height: 100%;
+
+            font-size: 1.8em;
+          }
+        }
+      }
     }
 
     &.expand-command-center {
       animation: expand-command-center 1.25s 0s 1 cubic-bezier(1, -1, 1, 1);
       animation-fill-mode: both;
     }
-  }
 
-  .top-bar {
-    position: absolute;
-    height: 1em;
-    width: 100%;
-
-    display: table;
-
-    background-color: #333;
-
-    color: #0f0;
-
-    text-shadow: 0 0 5px #0f0;
-
-    span {
-      display: table-cell;
-      width: 25%;
-
-      text-align: center;
-    }
-
-    span:first-child {
-      text-align: left;
-    }
-
-    span:last-child {
-      text-align: right;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
-    a:visited {
-      color: #0f0;
-    }
-  }
-
-  .bottom-bar {
-    position: absolute;
-    height: 2em;
-    width: 100%;
-
-    display: table;
-
-    bottom: 0%;
-    
-    background-color: #fff;
-
-    color: #000;
-
-    div {
-      display: table-cell;
-    }
-
-    .input {
-      input {
-        border: none;
-        width: 100%;
-        height: 100%;
-
-        font-size: 1.8em;
-      }
+    &.flip-command-center {
+      animation: flip-command-center 0.75s 0s 1 ease;
+      animation-fill-mode: both;
     }
   }
 }

@@ -7,7 +7,7 @@ function on(obj, listeners) {
 module.exports = () => {
   var fileBuffers = {};
 
-  return (file, callback) => {
+  return (file, listeners) => {
     var container = fileBuffers[file];
     if (container == null) {
       var reader = new FileReader();
@@ -24,7 +24,8 @@ module.exports = () => {
             resolve(buffer);
           },
           'abort': reject,
-          'error': reject
+          'error': reject,
+          'progress': listeners['progress']
         });
 
         //onloadstart
@@ -40,7 +41,7 @@ module.exports = () => {
     container
       .bufferPromise
       .then(
-        (buffer) => callback(buffer),
+        (buffer) => listeners['load'](buffer),
         (error) => console.log('Error reading file', error));
 
     return () => {

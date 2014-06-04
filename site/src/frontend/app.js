@@ -11,7 +11,6 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   .directive('peer',          require('./directives/peer/directive'))
   .directive('statsCenter',   require('./directives/statsCenter/directive'))
 
-  .directive('bigText',       require('./directives/util/bigText/directive'))
   .directive('fileDropArea',  require('./directives/util/fileDropArea/directive'))
   .directive('fitText',       require('./directives/util/fitText/directive'))
   .directive('selectOnClick', require('./directives/util/selectOnClick/directive'))

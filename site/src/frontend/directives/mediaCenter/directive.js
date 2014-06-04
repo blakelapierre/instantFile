@@ -3,7 +3,10 @@ module.exports = ['$sce', function($sce) {
     restrict: 'E',
     template: require('./template.html'),
     scope: {
-      file: '=file'
+      file: '=',
+      isTransferring: '=',
+      currentTransfer: '=',
+      isClient: '='
     },
     link: function($scope, element, attributes) {
       var video = element.find('video');

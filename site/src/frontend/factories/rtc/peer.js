@@ -1,6 +1,6 @@
-import {_} from 'lodash';
-
 import {Channel} from './channel';
+
+var _ = require('lodash');
 
 
 var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
@@ -15,6 +15,7 @@ class Peer {
   constructor(id, connectionListeners) {
     this._id = id;
     this._channels = [];
+    this._historicalChannels = [];
     this._streams = [];
     this._events = {};
     this._connectionListeners = connectionListeners;
@@ -44,7 +45,10 @@ class Peer {
 
   removeChannel(label) {
     var removed = _.remove(this._channels, function(c) { return c.label === label; })
-    if (removed.length > 0) _.each(removed, (channel) => this.fire('channel removed', channel));
+    if (removed.length > 0) _.each(removed, (channel) => {
+      this._historicalChannels.push(channel);
+      this.fire('channel removed', channel);
+    });
   }
 
   addStream() {
@@ -58,6 +62,8 @@ class Peer {
   get id() { return this._id; }
   get streams() { return this._streams; }
   get channels() { return this._channels; }
+
+  get historicalChannels() { return this._historicalChannels; }
 
   // Do we want to expose this?!
   get connection() { return this._connection; }

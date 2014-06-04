@@ -30,14 +30,21 @@ module.exports = function commandCenterDirective() {
       $scope.signalingState = 'no peers';
       $scope.iceConnectionState = 'no peers';
 
+      $scope.isClient = host.file == null;
+      $scope.isTransferring = false;
+
       signal.joinRoom(room);
 
       var queueApply = _.throttle(function() {
         $scope.$apply();
       }, 100);
 
-      if (host.file == null) {
+      if ($scope.isClient) {
         (function attachBlastDoor() {
+
+          // We are going to get these events for ALL peers
+          // Here we are only interested the ones coming from the host of the room
+          // This function filters those requests for us
           function ifHost(fn) {
             return function(peer, ...rest) {
               if (peer.id == room) {
@@ -82,12 +89,15 @@ module.exports = function commandCenterDirective() {
           }
         },
         'peer added': function(peer) {
+          console.log('peer added');
           $scope.peers.push(peer);
 
-          if (signal.myID == room) {
+          if (!$scope.isClient) {
             peer.connect();
             $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
-            var channel = peer.addChannel('instafile.io', {}, fileServeHandlers($scope, host, room));
+            var channel = peer.addChannel('instafile.io', {}, fileServeHandlers($scope, host, room, (transfer) => {
+              $scope.currentTransfer = transfer;
+            }));
           }
 
           if (peer.id == room) {
@@ -97,10 +107,13 @@ module.exports = function commandCenterDirective() {
               'channel added': (channel) => {
                 channel.on(fileReceiveHandlers(room, (transfer) => {
                   $scope.file = transfer.file;
+                  $scope.isTransferring = transfer.progress < 1;
+                  $scope.currentTransfer = transfer;
                   queueApply();
                 }));
               },
               'channel removed': (channel) => {
+                console.log('!!!!! channel removed', channel);
                 $scope.$apply();
               }
             });
@@ -109,6 +122,7 @@ module.exports = function commandCenterDirective() {
           $scope.$apply();
         },
         'peer removed': (peer) => {
+          console.log('peer removed', peer);
           $scope.oldPeers.push(peer);
           _.remove($scope.peers, (p) => { return p == peer; });
           _.remove($scope.connectedPeers, (p) => { return p == peer; });

@@ -1,4 +1,14 @@
+<div ng-if="isTransferring" class="current-transfer">
+  <div class="container">
+    <span class="header">Receiving {{currentTransfer.name}}...</span>
+    <div ng-show="currentTransfer.progress < 1" ng-class="{'progress-container': true}">
+      <div class="progress-bar" ng-style="{'width': (currentTransfer.progress * 100) + '%'}"></div>
+      <span class="stats">{{currentTransfer.transferred | number}} B / {{currentTransfer.total | number}} B  {{currentTransfer.speed | number:0}} B/s</span>
+    </div>
+  </div>
+</div>
+
 <img ng-if="type == 'image'" class="preview" ng-src="{{src}}" />
 <video ng-if="type == 'video'" class="preview" ng-src="{{src}}" onloadeddata="videoLoaded($event)" loadedmetadata="videoLoaded($event)" controls></video>
 <audio ng-if="type == 'audio'" class="preview" ng-src="{{src}}" controls></audio>
-<span ng-if="file != null" ng-click="saveFile()">Save File</span>
+<span ng-if="isClient == true && file" ng-click="saveFile()" class="save-file">Save File To Local Device</span>

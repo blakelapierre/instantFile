@@ -89,9 +89,23 @@ peer {
     .channel {
       direction: ltr;
       
-      .progress-bar {
-        left: 0%;
-        right: auto;
+      .progress-container {
+        border-color: #f00;
+
+        .progress-bar {
+          left: 0%;
+          right: auto;
+
+          background-color: #f00;
+        }
+
+        &.finished {
+          border: solid 1px #0f0;
+
+          .progress-bar {
+            background-color: #0f0;
+          }
+        }
       }
     }
   }

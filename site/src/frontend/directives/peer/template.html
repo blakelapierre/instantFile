@@ -1,4 +1,4 @@
-<div class="channel" ng-repeat="channel in peer.channels">
+<div class="channel" ng-repeat="channel in channels">
   <div ng-show="channel.transfer" ng-class="{'progress-container': true, 'finished': channel.transfer.progress >= 1}">
     <div class="progress-bar" ng-style="{'width': (channel.transfer.progress * 100) + '%'}"></div>
   </div>

@@ -61,10 +61,8 @@
   },
   "browserify-shim": {
     "angular": "global:angular",
+    "lodash": "global:_",
     "socket.io": "global:io",
-    "webrtc.io": "global:rtc",
-    "fitText": "global:fitText",
-    "bigText": "global:BigText",
-    "jQuery": "global:$"
+    "fitText": "global:fitText"
   }
 }
