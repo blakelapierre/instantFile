@@ -8,7 +8,8 @@ module.exports = function() {
       connections: '=',
       sendStats: '=',
       peers: '=',
-      oldPeers: '='
+      oldPeers: '=',
+      chat: '='
     },
     controller: ['$scope', 'host', function($scope, host) {
       if (host.file) {

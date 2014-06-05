@@ -7,7 +7,9 @@ class Channel {
   }
 
   send(data) { this._channel.send(data); }
+  sendJSON(data) { this._channel.send(JSON.stringify(data)); }
 
+  get label() { return this._channel.label; }
   get channel() { return this._channel; }
   get peer() { return this._peer; }
 

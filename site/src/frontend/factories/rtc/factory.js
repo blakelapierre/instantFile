@@ -58,7 +58,7 @@ function fire(event) {
 function createPeer(id, emit, fire) {
   var peer = new Peer(id, {
     negotiation_needed: (e) => {
-      sendOffer();
+      sendOffer(e.target);
       fire('peer negotiation_needed', peer, e);
     },
     ice_candidate: (e) => {
@@ -88,8 +88,8 @@ function createPeer(id, emit, fire) {
   });
 
 
-  function sendOffer() {
-    var connection = peer.connection;
+  function sendOffer(connection) {
+    //var connection = peer.connection;
 
     connection.createOffer(function(offer) {
       connection.setLocalDescription(offer, function() {
@@ -115,6 +115,8 @@ function createPeer(id, emit, fire) {
 function connectToSignal(server, onReady) {
   console.log('connecting to', server);
   var socket = io(server);
+
+  socket.rooms = [];
 
   function emit(event, data) { console.log('emitting', event, data); socket.emit(event, data); };
 
@@ -154,6 +156,8 @@ function connectToSignal(server, onReady) {
         var peer = getPeer(peerID),
             connection = peer.connection;
 
+        console.log('####adding candidate', peer, candidate);
+
         connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
           fire('peer ice_candidate accepted', peer, candidate);
         }, function(err) {
@@ -165,8 +169,11 @@ function connectToSignal(server, onReady) {
         var peer = getPeer(peerID),
             connection = peer.connection;
 
-        connection.setRemoteDescription(new RTCSessionDescription(answer));
-        fire('peer receive answer', peer, answer);
+        connection.setRemoteDescription(new RTCSessionDescription(answer), function() {
+          fire('peer receive answer', peer, answer);
+        }, function(err) {
+          fire ('peer error answer', peer, answer);
+        });
       };
 
       function sendAnswer(peerID, offer) {
@@ -210,23 +217,31 @@ function connectToSignal(server, onReady) {
         fire(name, ...arguments);
       }));
 
+      signal.ready = true;
       fire('ready', myID);
     });
   });
 
   function joinRoom(roomName) {
+    socket.rooms.push(roomName);
     emit('room join', roomName);
   };
 
   function leaveRoom(roomName) {
+    _.remove(socket.rooms, roomName);
     emit('room leave', roomName);
   };
+
+  function leaveRooms() {
+    _.each(socket.rooms, leaveRoom);
+  }
 
   var signal = {
     on: on,
     off: off,
     joinRoom: joinRoom,
-    leaveRoom: leaveRoom
+    leaveRoom: leaveRoom,
+    leaveRooms: leaveRooms
   };
 
   return signal;
@@ -241,6 +256,10 @@ module.exports = function() {
   return {
     connectToSignal: function(server) {
       if (signal == null) signal = connectToSignal(server);
+      else if (signal.ready) fire('ready', signal.myID); // oof, get me (this line of code) out of here
+      return signal;
+    },
+    existingSignal: function() {
       return signal;
     }
   };

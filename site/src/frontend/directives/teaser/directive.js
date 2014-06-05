@@ -10,9 +10,15 @@ module.exports = function() {
         $scope.$apply();
       }, 900);
     },
-    controller: ['$scope', 'host', function($scope, host) {
+    controller: ['$scope', 'host', 'rtc', function($scope, host, rtc) {
       host.file = null;
-      //$scope.openBlastDoors();
+      
+
+      var signal = rtc.existingSignal();
+
+      if (signal) {
+        signal.leaveRooms();
+      }
     }]
   }
 };

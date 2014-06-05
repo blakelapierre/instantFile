@@ -126,10 +126,11 @@ module.exports = function(io) {
     room.push(socket);
 
     socket.rooms.push(roomName);
+    console.log('join', roomName, socket.id);
   };
 
   function leaveRoom(socket, roomName) {
-    console.log('leave', socket.id, roomName);
+    console.log('leave', roomName, socket.id);
     var room = rooms.getByID(roomName);
 
     if (room == null) {

@@ -15,17 +15,22 @@ module.exports = function commandCenterDirective() {
                   'host', 
                   'rtc', 
                   'fileServeHandlers', 
-                  'fileReceiveHandlers', 
-      function($scope, $location, host, rtc, fileServeHandlers, fileReceiveHandlers) {
+                  'fileReceiveHandlers',
+                  'chatServeHandlers',
+                  'chatReceiveHandlers',
+      function($scope, $location, host, rtc, fileServeHandlers, fileReceiveHandlers, chatServeHandlers, chatReceiveHandlers) {
 
       var room = $location.path().substr(1),
           roomManager = {},
-          signal = rtc.connectToSignal('https://' + window.location.host);
+          // Don't want this (should be a single call that handles this case)
+          signal = rtc.existingSignal() || rtc.connectToSignal('https://' + window.location.host);
 
   
       $scope.peers = [];
       $scope.connectedPeers = [];
       $scope.oldPeers = [];
+
+      $scope.chat = [];
 
       $scope.signalingState = 'no peers';
       $scope.iceConnectionState = 'no peers';
@@ -69,10 +74,19 @@ module.exports = function commandCenterDirective() {
                   $scope.$apply();
                 }, 1000);
               }
-            })
+            }),
+
+            'peer ice_candidate accepted': (peer, candidate) => console.log('candidate accepted', peer, candidate),
+
+            'peer error set_local_description': (peer, error, offer) => console.log('peer error set_local_description', peer, error, offer),
+            'peer error create offer': (peer, error) => console.log('peer error create offer', peer, error),
+            'peer error ice_candidate': (peer, error, candidate) => console.log('peer error ice_candidate', peer, error, candidate),
+            'peer error send answer': (peer, error, offer) => console.log('peer error send answer', peer, error, offer),
+            'peer error set_remote_description': (peer, error, offer) => console.log('peer error set_remote_description', peer, error, offer)
           });
         })();
       }
+
 
       signal.on({
         'peer list': function(data) {
@@ -93,7 +107,28 @@ module.exports = function commandCenterDirective() {
           $scope.peers.push(peer);
 
           if (!$scope.isClient) {
-            peer.connect();
+            peer.connect(peer => {
+              setTimeout(() => {    
+                //Terrible placement. Fix this please
+                var chatServer = chatServeHandlers($scope.peers, (channel, message) => {
+                  console.log(message);
+                  $scope.chat.push(message);
+                  $scope.$apply();
+                });
+
+                if ($scope.sendChat == null) {
+                  $scope.sendChat = message => {
+                    message = {peerID: room, message: message};
+                    chatServer.sendMessageToAll(message);
+                    $scope.chat.push(message);
+                  };
+                }
+
+                var chatChannel = peer.addChannel('chat', {}, chatServer.handlers);
+                // peer.chatChannel = chatChannel;
+              }, 0);
+            });
+
             $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
             var channel = peer.addChannel('instafile.io', {}, fileServeHandlers($scope, host, room, (transfer) => {
               $scope.currentTransfer = transfer;
@@ -105,12 +140,28 @@ module.exports = function commandCenterDirective() {
 
             peer.on({
               'channel added': (channel) => {
-                channel.on(fileReceiveHandlers(room, (transfer) => {
-                  $scope.file = transfer.file;
-                  $scope.isTransferring = transfer.progress < 1;
-                  $scope.currentTransfer = transfer;
-                  queueApply();
-                }));
+                console.log('channel added', channel);
+                if (channel.label == 'instafile.io') {
+                  channel.on(fileReceiveHandlers(room, (transfer) => {
+                    $scope.file = transfer.file;
+                    $scope.isTransferring = transfer.progress < 1;
+                    $scope.currentTransfer = transfer;
+                    queueApply();
+                  }));
+                }
+                else if (channel.label == 'chat') {
+                  var chatClient = chatReceiveHandlers((channel, message) => {
+                    console.log(message);
+                    $scope.chat.push(message);
+                    $scope.$apply();
+                  });
+
+                  channel.on(chatClient.handlers);
+
+                  $scope.sendChat = message => channel.sendJSON({peerID: signal.myID, message: message});
+
+                  peer.chatChannel = channel;
+                }
               },
               'channel removed': (channel) => {
                 console.log('!!!!! channel removed', channel);
@@ -128,14 +179,13 @@ module.exports = function commandCenterDirective() {
           _.remove($scope.connectedPeers, (p) => { return p == peer; });
           $scope.$apply();
         },
-        'peer ice_candidate accepted': (peer, candidate) => { },
         'peer receive offer': (peer, offer) => {
           peer.status = 'Received Offer';
           $scope.$apply();
         },
-        'peer receive answer': (peer, answer) => { },
-        'peer send offer': (peer, offer) => { },
-        'peer send answer': (peer, offer) => { },
+        'peer receive answer': (peer, answer) => console.log('peer receive answer', peer, answer),
+        'peer send offer': (peer, offer) => console.log('peer send offer', peer, offer),
+        'peer send answer': (peer, answer) => console.log('peer send answer', peer, answer),
         'peer signaling_state_change': (peer, event) => {
           $scope.signalingState = peer.connection.signalingState;
           $scope.$apply();
@@ -145,9 +195,13 @@ module.exports = function commandCenterDirective() {
           $scope.$apply();
         },
         'peer data_channel connected': (peer, channel, handlers) => { },
-        'peer error send offer': (peer, error, offer) => { },
-        'peer error send answer': (peer, error, answer) => { },
-        'peer error set_remote_description': (peer, error) => { }
+        'peer ice_candidate accepted': (peer, candidate) => console.log('candidate accepted', peer, candidate),
+
+        'peer error set_local_description': (peer, error, offer) => console.log('peer error set_local_description', peer, error, offer),
+        'peer error create offer': (peer, error) => console.log('peer error create offer', peer, error),
+        'peer error ice_candidate': (peer, error, candidate) => console.log('peer error ice_candidate', peer, error, candidate),
+        'peer error send answer': (peer, error, offer) => console.log('peer error send answer', peer, error, offer),
+        'peer error set_remote_description': (peer, error, offer) => console.log('peer error set_remote_description', peer, error, offer)
       });
 
       $scope.transfers = [];

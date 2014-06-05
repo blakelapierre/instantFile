@@ -10,6 +10,7 @@
 
   <div class="chat">
     <h1>Messages</h1>
+    <div class="message" ng-repeat="message in chat">{{message.peerID}}: {{message.message}}</div>
   </div>
   
   <div class="history">

@@ -23,7 +23,7 @@ class Peer {
     this._nextChannelID = 0;
   }
 
-  connect() {
+  connect(onConnect) {
     var connection = new RTCPeerConnection({
       iceServers: [{url: 'stun:stun.l.google.com:19302'}]
     });
@@ -32,8 +32,23 @@ class Peer {
       (listener, eventName) => connection.addEventListener(eventName.replace(/\_/g, ''), listener));
 
     connection.addEventListener('datachannel', 
-      (event) => this._addChannel(new Channel(this, event.channel, { })));
+      event => {
+        console.log('****datachannel', event);
+        this._addChannel(new Channel(this, event.channel, { }));
+      });
   
+    if (onConnect) {
+      var connectWatcher = event => {
+        if (connection.iceConnectionState == 'connected' 
+          || connection.iceConnectionState == 'completed') {
+          onConnect(this);
+          connection.removeEventListener('iceconnectionstatechange', connectWatcher);
+        }
+      };
+
+      connection.addEventListener('iceconnectionstatechange', connectWatcher);
+    }
+
     this._connection = connection;
   }
 
@@ -62,6 +77,8 @@ class Peer {
   get id() { return this._id; }
   get streams() { return this._streams; }
   get channels() { return this._channels; }
+
+  channel(label) { return _.find(this._channels, {'label': label}); }
 
   get historicalChannels() { return this._historicalChannels; }
 
