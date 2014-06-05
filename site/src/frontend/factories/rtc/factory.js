@@ -103,10 +103,7 @@ function createPeer(id, emit, fire) {
       });
     }, function(err) {
       fire('peer error create offer', peer, err)
-    }, {
-      offerToReceiveAudio: false,
-      offerToReceiveVideo: false
-    })
+    });
   };
 
   return peer;
