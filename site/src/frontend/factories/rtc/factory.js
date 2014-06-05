@@ -85,7 +85,7 @@ function createPeer(id, emit, fire) {
 
       fire('peer data_channel connected', peer, channel);
     }
-  });
+  }, sendOffer);
 
 
   function sendOffer(connection) {
@@ -103,6 +103,9 @@ function createPeer(id, emit, fire) {
       });
     }, function(err) {
       fire('peer error create offer', peer, err)
+    }, {
+      offerToReceiveAudio: false,
+      offerToReceiveVideo: false
     })
   };
 

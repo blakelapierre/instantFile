@@ -12,13 +12,15 @@ var CONNECTION_EVENTS = ['negotiation_needed', 'ice_candidate', 'signaling_state
                          'data_channel'];
 
 class Peer {
-  constructor(id, connectionListeners) {
+  constructor(id, connectionListeners, sendOffer) {
     this._id = id;
     this._channels = [];
     this._historicalChannels = [];
     this._streams = [];
     this._events = {};
     this._connectionListeners = connectionListeners;
+
+    this.sendOffer = sendOffer;
 
     this._nextChannelID = 0;
   }
@@ -55,7 +57,11 @@ class Peer {
   addChannel(label, options, channelListeners) {
     label = label || ('data-channel-' + this._nextChannelID++);
 
-    return this._addChannel(new Channel(this, this.connection.createDataChannel(label, options), channelListeners));
+    var channel = this._addChannel(new Channel(this, this.connection.createDataChannel(label, options), channelListeners));
+
+    if (this._channels.length == 1 && window.mozRTCPeerConnection) {
+      this.sendOffer(this._connection);
+    }
   }
 
   removeChannel(label) {
