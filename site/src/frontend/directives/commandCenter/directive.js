@@ -123,7 +123,6 @@ module.exports = function commandCenterDirective() {
                     chatServer.sendMessageToAll(message);
                     $scope.chat.push(message);
                     if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
-                    $scope.$apply();
                   };
                 }
 

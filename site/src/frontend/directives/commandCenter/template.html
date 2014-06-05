@@ -2,13 +2,9 @@
   <div class="inner-container">
     <div class="content">
       <media-center file="file" is-transferring="isTransferring" current-transfer="currentTransfer" is-client="isClient"></media-center>
-      <stats-center file="file" transfers="transfers" connections="connections" send-stats="sendStats" peers="peers" old-peers="oldPeers" chat="chat"></stats-center>
       <control-center></control-center>
+      <stats-center file="file" transfers="transfers" connections="connections" send-stats="sendStats" peers="peers" old-peers="oldPeers" chat="chat"></stats-center>
     </div>
-
-      <div ng-show="test">
-
-      </div>
 
     <div class="top-bar">
       <span><a href="http://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" target="_blank">DTLS v1.2</a></span>
@@ -18,16 +14,11 @@
     </div>
 
     <div class="bottom-bar">
-      <form ng-submit="sendChat(chatMessage)">
+      <form ng-submit="sendChat(chatMessage); chatMessage = ''">
         <div class="input">
-          <input type="text" ng-model="chatMessage" placeholder="Post message... (doesn't work, you can try though)" />
+          <input type="text" ng-model="chatMessage" placeholder="Post message..." />
         </div>
       </form>
-      <div class="menu">
-      -
-      -
-      -
-      </div>
     </div>
   </div>
 </div>

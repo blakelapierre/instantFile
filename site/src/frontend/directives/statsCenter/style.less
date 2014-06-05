@@ -1,41 +1,72 @@
 stats-center {
+  height: 50%;
+
+  display: block;
+
   text-align: center;
 
   color: #6f6;
   text-shadow: 0 0 6px #9f9;
 
-  overflow-y: auto;
-
-  .url {
-    display: block;
+  .url-container {
+    display: table;
+    height: 10%;
     width: 90%;
 
-    text-align: center;
+    margin: auto;
 
-    margin: 1% auto;
-    padding: 0.5em;
+    .url {
+      display: table-cell;
 
-    font-size: 1.5em;
+      vertical-align: middle;
 
-    color: #000;
-    background-color: #fff;
+      text-align: center;
 
-    text-shadow: 1px 3px 5px #111;
-    box-shadow: 0px 0px 130px 0px #999 inset;
+      margin: 0 auto;
 
-    animation: box-shadow-pulse 3s 2 linear;
+      font-size: 1.5em;
+
+      color: #000;
+      background-color: #fff;
+
+      text-shadow: 1px 3px 5px #111;
+      box-shadow: 0px 0px 130px 0px #999 inset;
+
+      animation: box-shadow-pulse 3s 2 linear;
+    }
   }
 
   .comms {
-    display: table;
+    height: 90%;
     width: 100%;
 
     .peers, .chat, .history {
-      display: table-cell;
-      width: 33.333%;
+      height: 100%;
+      width: 31.333%;
+
+      margin: 0 1%;
+
+      font-size: small;
+
+      font-family: monospace;
+
+      float: left;
+
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      h1 {
+        text-align: center;
+      }
+
+      .message {
+        color: #fff;
+        text-shadow: 0 0 5px #333;
+      }
     }
 
-    .peers {
+    .chat {
+      text-align: left;
     }
   }
 }

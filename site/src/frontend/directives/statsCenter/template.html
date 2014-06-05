@@ -1,4 +1,4 @@
-<div ng-show="showUrl">
+<div ng-show="showUrl" class="url-container">
   <span class="url" select-on-click><a href="{{currentUrl}}" target="_new">{{currentUrl}}</a></span>
 </div>
 
@@ -10,7 +10,7 @@
 
   <div class="chat">
     <h1>Messages</h1>
-    <div class="message" ng-repeat="message in chat">{{message.peerID}}: {{message.message}}</div>
+    <div class="message" ng-repeat="message in chat"><span class="peer-id">{{message.peerID}}:</span> <span class="message">{{message.message}}</span></div>
   </div>
   
   <div class="history">
