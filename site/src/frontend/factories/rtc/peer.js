@@ -62,6 +62,8 @@ class Peer {
     if (this._channels.length == 1 && window.mozRTCPeerConnection) {
       this.sendOffer(this._connection);
     }
+
+    return channel.
   }
 
   removeChannel(label) {
