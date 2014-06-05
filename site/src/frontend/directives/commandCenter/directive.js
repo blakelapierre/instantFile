@@ -127,7 +127,13 @@ module.exports = function commandCenterDirective() {
                 }
 
                 var chatChannel = peer.addChannel('chat', {}, chatServer.handlers);
-                // peer.chatChannel = chatChannel;
+                
+                chatChannel.on('open', function() {
+                  _.each($scope.chat, (message) => {
+                    chatServer.sendMessage(peer, message);
+                  });
+                });
+
               }, 0);
             });
 

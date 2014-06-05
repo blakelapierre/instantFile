@@ -26,7 +26,8 @@ module.exports = function() {
     console.log('Initializing ChatServe');
 
     return {
-      sendMessageToAll: message => sendMessageToAll(peers, message), 
+      sendMessageToAll: message => sendMessageToAll(peers, message),
+      sendMessage: sendMessage,
       handlers: {
         open: channel => console.log('chat opened'),
         close: channel => {},
