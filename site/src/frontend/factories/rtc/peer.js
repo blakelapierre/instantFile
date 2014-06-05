@@ -63,7 +63,7 @@ class Peer {
       this.sendOffer(this._connection);
     }
 
-    return channel.
+    return channel;
   }
 
   removeChannel(label) {
