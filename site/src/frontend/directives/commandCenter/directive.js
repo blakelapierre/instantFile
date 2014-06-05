@@ -60,11 +60,11 @@ module.exports = function commandCenterDirective() {
           }
 
           signal.on({
-            'peer ice_candidate': ifHost(() => $scope.addBlastDoorsMessage('ICE Candidate Received')),
+            //'peer ice_candidate': ifHost(() => $scope.addBlastDoorsMessage('ICE Candidate Received')),
             'peer receive offer': ifHost(() => $scope.addBlastDoorsMessage('Offer Received')),
             'peer receive answer': ifHost(() => $scope.addBlastDoorsMessage('Answer Received')),
             'peer send answer': ifHost(() => $scope.addBlastDoorsMessage('Answer Sent')),
-            'peer signaling_state_change': ifHost((peer) => $scope.addBlastDoorsMessage('Signaling: ' + peer.connection.signalingState)),
+            //'peer signaling_state_change': ifHost((peer) => $scope.addBlastDoorsMessage('Signaling: ' + peer.connection.signalingState)),
             'peer ice_connection_state_change': ifHost((peer) => {
               var state = peer.connection.iceConnectionState;
               $scope.addBlastDoorsMessage('ICE: ' + state);
@@ -113,6 +113,7 @@ module.exports = function commandCenterDirective() {
                 var chatServer = chatServeHandlers($scope.peers, (channel, message) => {
                   console.log(message);
                   $scope.chat.push(message);
+                  if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
                   $scope.$apply();
                 });
 
@@ -121,6 +122,8 @@ module.exports = function commandCenterDirective() {
                     message = {peerID: room, message: message};
                     chatServer.sendMessageToAll(message);
                     $scope.chat.push(message);
+                    if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
+                    $scope.$apply();
                   };
                 }
 
@@ -153,6 +156,7 @@ module.exports = function commandCenterDirective() {
                   var chatClient = chatReceiveHandlers((channel, message) => {
                     console.log(message);
                     $scope.chat.push(message);
+                    if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
                     $scope.$apply();
                   });
 
