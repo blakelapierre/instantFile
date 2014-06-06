@@ -5,14 +5,16 @@
 
 <div ng-class="{'door':true, 'upper-door':true, 'open-doors':blastDoorsOpen}">
   <div class="table">
-    <div class="messages">
+
+    <div ng-if="blastDoorsMessages.length > 0" class="messages">
       <div class="message" ng-repeat="message in blastDoorsMessages track by $index">{{message}}</div>
     </div>
   </div>
 </div>
 <div ng-class="{'door':true, 'lower-door':true, 'open-doors':blastDoorsOpen}">
   <div class="table">
-    <div class="messages">
+
+    <div ng-if="blastDoorsMessages.length > 0" class="messages">
       <div class="message" ng-repeat="message in blastDoorsMessages track by $index">{{message}}</div>
     </div>
   </div>
