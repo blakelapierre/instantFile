@@ -30,7 +30,6 @@ module.exports = () => {
 
         //onloadstart
         //onloadend
-        //onprogress
 
         reader.readAsArrayBuffer(file);
       });
