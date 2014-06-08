@@ -9,6 +9,7 @@ module.exports = () => {
 
   return (file, listeners) => {
     var container = fileBuffers[file];
+
     if (container == null) {
       var reader = new FileReader();
       
@@ -25,11 +26,10 @@ module.exports = () => {
           },
           'abort': reject,
           'error': reject,
-          'progress': listeners['progress']
+          'progress': listeners['progress'] || () => {},
+          'loadstart': listeners['loadstart'] || () => {},
+          'loadend': listeners['loadend'] || () => {}
         });
-
-        //onloadstart
-        //onloadend
 
         reader.readAsArrayBuffer(file);
       });
