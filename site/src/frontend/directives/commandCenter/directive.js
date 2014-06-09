@@ -200,6 +200,7 @@ module.exports = function commandCenterDirective() {
           $scope.$apply();
         },
         'peer ice_connection_state_change': (peer, event) => {
+          console.log('ice_state', event);
           $scope.iceConnectionState = peer.connection.iceConnectionState;
           $scope.$apply();
         },
