@@ -59,7 +59,7 @@ class Peer {
 
     var channel = this._addChannel(new Channel(this, this.connection.createDataChannel(label, options), channelListeners));
 
-    if (this._channels.length == 1 && window.mozRTCPeerConnection) {
+    if (this._channels.length > 0 && window.mozRTCPeerConnection) {
       this.sendOffer(this._connection);
     }
 
