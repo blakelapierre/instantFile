@@ -1,7 +1,7 @@
 <div ng-class="{'container': true, 'expand-command-center': isClient && blastDoorsOpen, 'flip-command-center': !isClient && blastDoorsOpen}">
   <div class="inner-container">
     <div class="content">
-      <media-center file="file" is-transferring="isTransferring" current-transfer="currentTransfer" is-client="isClient"></media-center>
+      <media-center file="file" is-transferring="isTransferring" current-transfer="currentTransfer" is-client="isClient" stream-src="streamSrc"></media-center>
       <control-center></control-center>
       <stats-center file="file" transfers="transfers" connections="connections" send-stats="sendStats" peers="peers" old-peers="oldPeers" chat="chat"></stats-center>
     </div>

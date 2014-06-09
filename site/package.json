@@ -33,7 +33,8 @@
     "lodash": "~2.4.1",
     "node-uuid": "~1.4.1",
     "traceur": "0.0.42",
-    "di": "0.0.1"
+    "di": "0.0.1",
+    "mp4box.js": "blakelapierre/mp4box.js"
   },
   "devDependencies": {
     "grunt": "~0.4.5",

@@ -8,7 +8,9 @@
   </div>
 </div>
 
+<video src="{{streamSrc}}" class="preview" autoplay="true" controls></video>
+
 <img ng-if="type == 'image'" class="preview" ng-src="{{src}}" />
-<video ng-if="type == 'video'" class="preview" ng-src="{{src}}" onloadeddata="videoLoaded($event)" loadedmetadata="videoLoaded($event)" controls></video>
+<video ng-if="type == 'video'" class="preview" ng-src="{{src}}" controls></video>
 <audio ng-if="type == 'audio'" class="preview" ng-src="{{src}}" controls></audio>
 <span ng-if="isClient == true && file" ng-click="saveFile()" class="save-file">Save File To Local Device</span>

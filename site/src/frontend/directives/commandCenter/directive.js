@@ -147,11 +147,12 @@ module.exports = function commandCenterDirective() {
             $scope.addBlastDoorsMessage('Peer Alive.........Connecting');
 
             peer.on({
-              'channel added': (channel) => {
+              'channel added': channel => {
                 console.log('channel added', channel);
                 if (channel.label == 'instafile.io') {
                   channel.on(fileReceiveHandlers(room, (transfer) => {
                     $scope.file = transfer.file;
+                    $scope.streamSrc = transfer.src;
                     $scope.isTransferring = transfer.progress < 1;
                     $scope.currentTransfer = transfer;
                     queueApply();

@@ -43,6 +43,19 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
 
       var doneWithFile = getFileBuffer(host.file, {
         'load': (buffer) => {
+          var mp4 = new MP4Box();
+
+          mp4.onError = error => {
+            console.log(error);
+          };
+
+          mp4.onReady = info => {
+            console.log(info);
+          };
+
+          mp4.appendBuffer(buffer);
+          mp4.flush();
+
           channel.transfer = sendFile(channel.channel, host.file, buffer, createTakeMeasurement(measurements, queueApply));
         },
         'error': error => console.log(error)
@@ -54,7 +67,9 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
     var chunkSize = 64 * 1024,
         transfer = {};
 
-    channel.send(buffer.byteLength + ';' + file.name + ';' + file.type);
+    console.log(buffer.byteLength);
+
+    channel.send(buffer.byteLength + ';' + file.name + ';' + file.type + ';' + chunkSize.toString());
 
     var byteLength = buffer.byteLength,
         offset = 0,
@@ -88,11 +103,12 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
           var chunk = buffer.slice(offset, offset + size);
 
           try {
-            channel.send(chunk);
+            channel.send(new Uint8Array(chunk));
 
             offset += size;
             backoff = 0;
           } catch(e) {
+            console.log(e);
             backoff = Math.min(1000, backoff + 100);
             
             maxBufferAmount = channel.bufferedAmount;

@@ -77,6 +77,7 @@ module.exports = function(grunt) {
     copy: {
       libs: {
         files: [
+          {expand: true, flatten: true, src: ['./node_modules/mp4box.js/src/*'], dest: './dist/libs/mp4box.js/'}
           // For some reason the version of this file that comes from npm doesn't work. I've put
           // my modified version directly into dist/libs...it works :) You want something better? Do it.
           //{src: ['node_modules/webrtc.io-client/lib/webrtc.io.js'], dest: './dist/libs/webrtc.io.js'}

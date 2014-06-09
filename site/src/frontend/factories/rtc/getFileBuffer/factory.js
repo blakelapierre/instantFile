@@ -26,9 +26,9 @@ module.exports = () => {
           },
           'abort': reject,
           'error': reject,
-          'progress': listeners['progress'] || () => {},
-          'loadstart': listeners['loadstart'] || () => {},
-          'loadend': listeners['loadend'] || () => {}
+          'progress': listeners['progress'] || function() {},
+          'loadstart': listeners['loadstart'] || function() {},
+          'loadend': listeners['loadend'] || function() {}
         });
 
         reader.readAsArrayBuffer(file);
