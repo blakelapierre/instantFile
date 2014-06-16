@@ -1,6 +1,5 @@
 #!/bin/bash
 
 cd site
-cp ~/instafile.io.key src/server/cert
 npm install
 grunt serve
