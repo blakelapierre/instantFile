@@ -39,7 +39,7 @@ function getPublicAddress (deliver) {
 module.exports = startServer;
 
 var ca = [fs.readFileSync(path.join(__dirname, './server/cert/GandiStandardSSLCA.crt'))],
-    key = fs.readFileSync('~/instafile.io.key'),
+    key = fs.readFileSync(path.join(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE, '~/instafile.io.key')),
     cert = fs.readFileSync(path.join(__dirname, './server/cert/instafile.io.cert'));
 
 var debug = process.argv[2] == 'debug';
