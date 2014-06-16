@@ -68,12 +68,12 @@ module.exports = ['$sce', function fileReceiveHandlers($sce) {
               'abort': event => console.log('abort', event)
             });
 
-            // sourceBuffer.addEventListener('updateend', function(event) {
-            //   console.log('updateend');
-            //   var sourceBuffer = event.target;
+            sourceBuffer.addEventListener('updateend', function(event) {
+              console.log('updateend');
+              var sourceBuffer = event.target;
 
-            //   if (transfer.streamChunk < transfer.chunkCount) sourceBuffer.appendBuffer(transfer.buffers[transfer.streamChunk++]);
-            // });
+              if (transfer.streamChunk < transfer.chunkCount) sourceBuffer.appendBuffer(transfer.buffers[transfer.streamChunk++]);
+            });
 
             transfer.sourceBuffer = sourceBuffer;
 
@@ -84,6 +84,31 @@ module.exports = ['$sce', function fileReceiveHandlers($sce) {
               }
               catch (e) { console.log(e); }
             }
+
+            // var mp4 = new MP4Box();
+
+            // Log.setLogLevel(5);
+
+            // mp4.onError = error => {
+            //   console.log(error);
+            // };
+
+            // mp4.onReady = info => {
+            //   console.log('++mp4 info', info);
+
+            //   mp4.onSegment = (id, user, buffer) => {
+            //     console.log('got segment for ', id);
+            //     transfer.sourceBuffer.appendBuffer(buffer);
+            //   };
+
+            //   mp4.setSegmentOptions(1, {}, {nbSamples: 50});
+
+            //   var initSeg = mp4.initializeSegmentation();
+
+            //   console.log(initSeg);
+            // };
+
+            // transfer.mp4 = mp4;
           },
           'sourceended': event => {
             console.log('sourceended', event);
@@ -96,6 +121,9 @@ module.exports = ['$sce', function fileReceiveHandlers($sce) {
         transfer.mediaSource = mediaSource;
         transfer.src = $sce.trustAsResourceUrl(window.URL.createObjectURL(mediaSource));
       }
+
+      // mp4.appendBuffer(buffer);
+      // mp4.flush();
 
       return function receiveData(channel, message) {
         var now = new Date().getTime();

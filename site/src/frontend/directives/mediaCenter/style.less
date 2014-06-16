@@ -1,70 +1,84 @@
 media-center {
+  display: table;
+
   height: 40%;
 
-  display: block;
+  .cell {
+    display: table-cell;
 
-  .preview {
-    display: block;
-    max-height: 100%;
-    max-width: 100%;
-    margin: 0 auto;
+    height: 40%;
   }
 
-  .current-transfer {
-    width: 100%;
-    height: 100%;
-    
-    display: table;
+  .left-panel, .right-panel {
+    width: 25%;
+  }
 
-    .container {
-      position: relative;
+  .center-panel {
+    width: 50%;
 
+    .preview {
+      display: block;
+      max-height: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .current-transfer {
       width: 100%;
+      height: 100%;
       
-      display: table-cell;
-      
-      vertical-align: middle;
+      display: table;
 
-      .header {
+      .container {
+        position: relative;
+
         width: 100%;
+        
+        display: table-cell;
+        
+        vertical-align: middle;
 
-        display: block;
+        .header {
+          width: 100%;
 
-        text-align: center;
-
-        color: #0f0;
-
-        text-shadow: 0 0 5px #0f0;
-      }
-
-      .progress-container {
-        width: 99%;
-        height: 3em;
-
-        margin: 0 auto;
-
-        border: solid 1px #00f;
-
-        .progress-bar {
-          left: 0%;
-
-          width: 0%;
-
-          height: 3em;
-
-          background-color: #00f;
-        }
-
-        .stats {
           display: block;
 
           text-align: center;
 
-          margin-top: -1.5em;
-
-          font-size: 1.5em;
-
           color: #0f0;
+
+          text-shadow: 0 0 5px #0f0;
+        }
+
+        .progress-container {
+          width: 99%;
+          height: 3em;
+
+          margin: 0 auto;
+
+          border: solid 1px #00f;
+
+          .progress-bar {
+            left: 0%;
+
+            width: 0%;
+
+            height: 3em;
+
+            background-color: #00f;
+          }
+
+          .stats {
+            display: block;
+
+            text-align: center;
+
+            margin-top: -1.5em;
+
+            font-size: 1.5em;
+
+            color: #0f0;
+          }
         }
       }
     }

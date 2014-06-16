@@ -14,6 +14,7 @@ module.exports = ['$sce', function($sce) {
 
       $scope.$watch('src', function(src) {
         console.dir(element, $scope.file);
+        console.dir(video);
       });
 
       $scope.videoLoaded = function(event) {

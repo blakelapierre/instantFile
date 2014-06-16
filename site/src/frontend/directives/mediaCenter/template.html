@@ -1,16 +1,26 @@
-<div ng-if="isTransferring" class="current-transfer">
-  <div class="container">
-    <span class="header">Receiving {{currentTransfer.name}}...</span>
-    <div ng-show="currentTransfer.progress < 1" ng-class="{'progress-container': true}">
-      <div class="progress-bar" ng-style="{'width': (currentTransfer.progress * 100) + '%'}"></div>
-      <span class="stats">{{currentTransfer.transferred | number}} B / {{currentTransfer.total | number}} B  {{currentTransfer.speed | number:0}} B/s</span>
+<div class="cell left-panel">
+</div>
+
+<div class="cell center-panel">
+  <div ng-if="isTransferring" class="current-transfer">
+    <div class="container">
+      <span class="header">Receiving {{currentTransfer.name}}...</span>
+      <div ng-show="currentTransfer.progress < 1" ng-class="{'progress-container': true}">
+        <div class="progress-bar" ng-style="{'width': (currentTransfer.progress * 100) + '%'}"></div>
+        <span class="stats">{{currentTransfer.transferred | number}} B / {{currentTransfer.total | number}} B  {{currentTransfer.speed | number:0}} B/s</span>
+      </div>
     </div>
+  </div>
+
+  <div ng-if="!isTransferring" class="media">
+    <!-- <video src="{{streamSrc}}" class="preview" autoplay="true" controls></video> -->
+
+    <img ng-if="type == 'image'" class="preview" ng-src="{{src}}" />
+    <video ng-if="type == 'video'" class="preview" ng-src="{{src}}" controls></video>
+    <audio ng-if="type == 'audio'" class="preview" ng-src="{{src}}" controls></audio>
+    <span ng-if="isClient == true && file" ng-click="saveFile()" class="save-file">Save File To Local Device</span>
   </div>
 </div>
 
-<video src="{{streamSrc}}" class="preview" autoplay="true" controls></video>
-
-<img ng-if="type == 'image'" class="preview" ng-src="{{src}}" />
-<video ng-if="type == 'video'" class="preview" ng-src="{{src}}" controls></video>
-<audio ng-if="type == 'audio'" class="preview" ng-src="{{src}}" controls></audio>
-<span ng-if="isClient == true && file" ng-click="saveFile()" class="save-file">Save File To Local Device</span>
+<div class="cell right-panel">
+</div>

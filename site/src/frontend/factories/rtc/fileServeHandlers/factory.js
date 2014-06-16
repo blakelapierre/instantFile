@@ -1,5 +1,11 @@
 var _ = require('lodash');
 
+function on(obj, listeners) {
+  for (var eventName in listeners) {
+    obj.addEventListener(eventName, listeners[eventName]);
+  }
+}
+
 module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
   var messageHandler = receiveRequest;
 
@@ -42,21 +48,56 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
       }];
 
       var doneWithFile = getFileBuffer(host.file, {
-        'load': (buffer) => {
-          var mp4 = new MP4Box();
+        'load': buffer => {
 
-          mp4.onError = error => {
-            console.log(error);
-          };
+          if (/video\//.test(host.file.type)) {
+            var mp4 = new MP4Box();
 
-          mp4.onReady = info => {
-            console.log(info);
-          };
+            Log.setLogLevel(5);
 
-          mp4.appendBuffer(buffer);
-          mp4.flush();
+            mp4.onError = error => {
+              console.log(error);
+            };
 
-          channel.transfer = sendFile(channel.channel, host.file, buffer, createTakeMeasurement(measurements, queueApply));
+            mp4.onReady = info => {
+              console.log(info);
+
+              var segments = [],
+                  numSamples = 1000;
+
+              mp4.onSegment = (id, user, buffer) => {
+                segments.push(buffer);
+                if (segments.length == 122) {
+                  console.log(segments.length);
+                  var blob = new Blob(segments, {type: host.file.type});
+                  blob.name = host.file.name;
+
+                  var reader = new FileReader();
+
+                  on(reader, {
+                    'error': e => console.log(e),
+                    'load': e => {
+                      var buffer = e.target.result;
+                      channel.transfer = sendFile(channel.channel, blob, buffer, createTakeMeasurement(measurements, queueApply));
+                    }
+                  });
+
+                  reader.readAsArrayBuffer(blob);
+                }
+                console.log(id, user, 'got segment', segments.length, buffer.byteLength);
+              };
+
+              mp4.setSegmentOptions(info.tracks[0].id, {}, {nbSamples: numSamples});
+
+              segments.push(mp4.initializeSegmentation());
+            };
+
+            mp4.appendBuffer(buffer);
+            mp4.flush();
+          }
+          else {
+            channel.transfer = sendFile(channel.channel, host.file, buffer, createTakeMeasurement(measurements, queueApply));
+          }
         },
         'error': error => console.log(error)
       });
@@ -67,16 +108,16 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
     var chunkSize = 64 * 1024,
         transfer = {};
 
-    console.log(buffer.byteLength);
-
-    channel.send(buffer.byteLength + ';' + file.name + ';' + file.type + ';' + chunkSize.toString());
-
-    var byteLength = buffer.byteLength,
+    var byteLength = buffer.byteLength || buffer.size,
         offset = 0,
         backoff = 0,
         lastIterations = 1,
         startTime = new Date().getTime(),
         maxBufferAmount = Number.POSITIVE_INFINITY;
+
+
+    channel.send(byteLength + ';' + file.name + ';' + file.type + ';' + chunkSize.toString());
+
 
     transfer.name = file.name;
     transfer.startTime = startTime;
