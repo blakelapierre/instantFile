@@ -2,6 +2,8 @@
 // 
 // This accepts files transferred using `fileServeHandlers`
 
+var _ = require('lodash');
+
 function on(obj, listeners) {
   for (var eventName in listeners) {
     obj.addEventListener(eventName, listeners[eventName]);
@@ -13,27 +15,17 @@ module.exports = ['$sce', function fileReceiveHandlers($sce) {
     var messageHandler = receiveHeader;
 
     function receiveHeader(channel, message) {
-      var parts = message.toString().split(';');
+      var header = JSON.parse(message);
 
-      if (parts.length != 4) throw Error('Got bad file transfer header');
+      console.log('Received File Transfer Header:', header);
 
-      var byteLength = parseInt(parts[0]),
-          name = parts[1],
-          type = parts[2],
-          chunkSize = parseInt(parts[3]);
-
-      var transfer = channel.transfer = {
-        byteLength: byteLength,
-        name: name,
-        type: type,
-        transferred: 0,
-        speed: 0,
+      var transfer = _.extend(header, {
         position: 0,
-        buffers: new Array(Math.ceil(byteLength / chunkSize)),
+        buffers: new Array(Math.ceil(header.byteLength / header.chunkSize)),
         chunkCount: 0,
         streamChunk: 0,
         start: new Date().getTime()
-      };
+      });
       
       messageHandler = createReceiveData(transfer); // Here we pass control of the rest of the transfer to receiveData
 
@@ -41,7 +33,7 @@ module.exports = ['$sce', function fileReceiveHandlers($sce) {
     };
 
     function createReceiveData(transfer) {
-      if (/video\/.*/.test(transfer.type)) {
+      if (transfer.type == 'video/mp4') {
         var mediaSource = new MediaSource();
 
         on(mediaSource, {

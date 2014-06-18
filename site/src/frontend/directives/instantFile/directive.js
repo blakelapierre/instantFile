@@ -14,6 +14,7 @@ module.exports = function instantFileDirective() {
 
         angular.element(input).bind('change', function(e) {
           host.file = e.target.files[0];
+          console.log('file: ', host.file);
           launchCommandCenter();
         });
 

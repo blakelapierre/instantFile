@@ -21,6 +21,7 @@ module.exports = angular.module('instantFile', ['ngRoute'])
   .factory('chatReceiveHandlers',   require('./factories/rtc/chatReceiveHandlers/factory'))
   .factory('chatServeHandlers',     require('./factories/rtc/chatServeHandlers/factory'))
   .factory('getFileBuffer',         require('./factories/rtc/getFileBuffer/factory'))
+  .factory('getSegmentedMP4',       require('./factories/rtc/getSegmentedMP4/factory'))
   .factory('fileReceiveHandlers',   require('./factories/rtc/fileReceiveHandlers/factory'))
   .factory('fileServeHandlers',     require('./factories/rtc/fileServeHandlers/factory'))
 

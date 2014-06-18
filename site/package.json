@@ -51,11 +51,13 @@
     "browserify": "4.1.6",
     "browserify-shim": "3.5.0",
     "partialify": "~3.1.1",
-    "es6ify": "~1.1.0"
+    "es6ify": "~1.1.0",
+    "workerify": "~0.3.0"
   },
   "browserify": {
     "transform": [
       "es6ify",
+      "workerify",
       "browserify-shim",
       "partialify"
     ]
@@ -64,6 +66,7 @@
     "angular": "global:angular",
     "lodash": "global:_",
     "socket.io": "global:io",
-    "fitText": "global:fitText"
+    "fitText": "global:fitText",
+    "mp4box.js": "global:MP4Box"
   }
 }

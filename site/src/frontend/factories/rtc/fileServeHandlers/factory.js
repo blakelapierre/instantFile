@@ -6,7 +6,7 @@ function on(obj, listeners) {
   }
 }
 
-module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
+module.exports = ['getFileBuffer', 'getSegmentedMP4', function fileServeHandlers(getFileBuffer, getSegmentedMP4) {
   var messageHandler = receiveRequest;
 
   function createTakeMeasurement(measurements, queueApply) {
@@ -49,51 +49,16 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
 
       var doneWithFile = getFileBuffer(host.file, {
         'load': buffer => {
+          console.log(host.file.type);
+          if (host.file.type == 'video/mp4') {
 
-          if (/video\//.test(host.file.type)) {
-            var mp4 = new MP4Box();
-
-            Log.setLogLevel(5);
-
-            mp4.onError = error => {
-              console.log(error);
-            };
-
-            mp4.onReady = info => {
-              console.log(info);
-
-              var segments = [],
-                  numSamples = 1000;
-
-              mp4.onSegment = (id, user, buffer) => {
-                segments.push(buffer);
-                if (segments.length == 122) {
-                  console.log(segments.length);
-                  var blob = new Blob(segments, {type: host.file.type});
-                  blob.name = host.file.name;
-
-                  var reader = new FileReader();
-
-                  on(reader, {
-                    'error': e => console.log(e),
-                    'load': e => {
-                      var buffer = e.target.result;
-                      channel.transfer = sendFile(channel.channel, blob, buffer, createTakeMeasurement(measurements, queueApply));
-                    }
-                  });
-
-                  reader.readAsArrayBuffer(blob);
-                }
-                console.log(id, user, 'got segment', segments.length, buffer.byteLength);
-              };
-
-              mp4.setSegmentOptions(info.tracks[0].id, {}, {nbSamples: numSamples});
-
-              segments.push(mp4.initializeSegmentation());
-            };
-
-            mp4.appendBuffer(buffer);
-            mp4.flush();
+            console.log('segmenting');
+            var doneWithStream = getSegmentedMP4(host.file, buffer, {
+              'load': buffer => {
+                console.log('segmented buffer', buffer);
+                channel.transfer = sendFile(channel.channel, host.file, buffer, createTakeMeasurement(measurements, queueApply));
+              }
+            });
           }
           else {
             channel.transfer = sendFile(channel.channel, host.file, buffer, createTakeMeasurement(measurements, queueApply));
@@ -115,8 +80,14 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
         startTime = new Date().getTime(),
         maxBufferAmount = Number.POSITIVE_INFINITY;
 
+    var header = {
+      byteLength: byteLength,
+      name: file.name,
+      type: file.type,
+      chunkSize: chunkSize.toString()
+    };
 
-    channel.send(byteLength + ';' + file.name + ';' + file.type + ';' + chunkSize.toString());
+    channel.send(JSON.stringify(header));
 
 
     transfer.name = file.name;
