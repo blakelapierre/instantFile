@@ -3,7 +3,7 @@ class Channel {
     this._channel = channel;
     this._peer = peer;
 
-    this.on(channelListeners);
+    this.on(channelListeners || {});
   }
 
   send(data) { this._channel.send(data); }
@@ -22,7 +22,9 @@ class Channel {
       return;
     }
 
-    this.channel.addEventListener(event, (event) => listener(this, event));
+    this.channel.addEventListener(event, event => listener(this, event));
+
+    return this;
   }
   /*
   -  Event Handling

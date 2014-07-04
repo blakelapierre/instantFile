@@ -9,8 +9,6 @@ var _ = require('lodash'),
 var RTCPeerConnection = (window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
 var URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 var getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-var RTCIceCandidate = (window.mozRTCIceCandidate || window.RTCIceCandidate);
-var RTCSessionDescription = (window.mozRTCSessionDescription || window.RTCSessionDescription); // order is very important: "RTCSessionDescription" defined in Nighly but useless
 
 /*
 +  Event Handling
@@ -24,7 +22,7 @@ function on(event, listener) {
 
   events[event] = events[event] || [];
   events[event].push(listener);
-};
+}
 
 function off(event, listener) {
   if (typeof event == 'object') {
@@ -39,9 +37,9 @@ function off(event, listener) {
         listeners.splice(i, 1);
       }
     }
-    if (listeners.length == 0) delete events[event];
+    if (listeners.length === 0) delete events[event];
   }
-};
+}
 
 function fire(event) {
   var listeners = events[event] || [],
@@ -50,64 +48,52 @@ function fire(event) {
   for (var i = 0; i < listeners.length; i++) {
     listeners[i].apply(null, args);
   }
-};
+}
 /*
 -  Event Handling
 */
 
-function createPeer(id, emit, fire) {
-  var peer = new Peer(id, {
-    negotiation_needed: (e) => {
-      sendOffer(e.target);
-      fire('peer negotiation_needed', peer, e);
+function createPeer(peerID, config, emit, fire) {
+  var peer = new Peer(peerID, config, {
+
+    negotiation_needed: event => {
+      console.log('negotiation_needed', config);
+      if (peer.isConnectingPeer) sendOffer(event.target); // should this if condition be here?
+      fire('peer negotiation_needed', peer, event);
     },
-    ice_candidate: (e) => {
-      var candidate = e.candidate;
+
+    ice_candidate: event => {
+      var candidate = event.candidate;
+      console.log('candidate', event);
 
       if (candidate) {
-        emit('ice_candidate', {
-          peerID: id,
-          label: candidate.sdpMLineIndex,
-          candidate: candidate.candidate
-        });
-
+        emit('ice_candidate', {peerID, candidate});
         fire('peer ice_candidate', peer, candidate);
       }
     },
-    signaling_state_change: (e) => {
-      fire('peer signaling_state_change', peer, e);
-    },
-    ice_connection_state_change: (e) => fire('peer ice_connection_state_change', peer, e),
-    add_stream: (e) => fire('peer add_stream', peer, e),
-    remove_stream: (e) => fire('peer remove_stream', peer, e),
-    data_channel: (e) => {
-      var channel = e.channel;
 
-      fire('peer data_channel connected', peer, channel);
-    }
-  }, sendOffer);
+    // Do we want to be passing the raw event here?
+    add_stream:                   event => fire('peer add_stream', peer, event),
+    remove_stream:                event => fire('peer remove_stream', peer, event),
+    data_channel:                 event => fire('peer data_channel connected', peer, event.channel),
+    signaling_state_change:       event => fire('peer signaling_state_change', peer, event),
+    ice_connection_state_change:  event => fire('peer ice_connection_state_change', peer, event)
+  });
 
 
-  function sendOffer(connection) {
-    //var connection = peer.connection;
-
-    connection.createOffer(function(offer) {
-      connection.setLocalDescription(offer, function() {
-        emit('peer offer', {
-          peerID: id,
-          offer: connection.localDescription
-        });
-        fire('peer send offer', peer, offer);
-      }, function(err) {
-        fire('peer error set_local_description', peer, err, offer);
-      });
-    }, function(err) {
-      fire('peer error create offer', peer, err)
-    });
-  };
+  function sendOffer() {
+    peer
+      .initiateOffer()
+      .then(
+        offer => {
+          emit('peer offer', {peerID, offer});
+          fire('peer send offer', peer, offer);
+        },
+        ...error => fire(...error));
+  }
 
   return peer;
-};
+}
 
 /*
 +  Signalling
@@ -116,16 +102,14 @@ function connectToSignal(server, onReady) {
   console.log('connecting to', server);
   var socket = io(server);
 
-  socket.rooms = [];
-
-  function emit(event, data) { console.log('emitting', event, data); socket.emit(event, data); };
+  function emit(event, data) { console.log('emitting', event, data); socket.emit(event, data); }
 
   socket.on('error', function() {
     console.log('error', arguments);
   });
 
-  socket.on('connect', function() {
-    socket.on('your_id', function(myID) {
+  socket.on('connect', () => {
+    socket.on('your_id', myID => {
       console.log('your_id');
       var peers = [],
           peersHash = {};
@@ -134,85 +118,78 @@ function connectToSignal(server, onReady) {
 
       function getPeer(id) {
         return peersHash[id];
-      };
+      }
 
-      function addPeer(id) {
-        var peer = createPeer(id, emit, fire);
+      function addPeer(id, config) {
+        config = config || {isExistingPeer: false};
+
+        var peer = createPeer(id, config, emit, fire);
         peers.push(peer);
         peersHash[id] = peer;
-        
+
         fire('peer added', peer);
-      };
+      }
 
       function removePeerByID(id) {
         var peer = getPeer(id);
-        peer.close();
-        _.remove(peers, function(peer) { return peer.id === id; });
-        delete peersHash[id];
-        fire('peer removed', peer);
-      };
-
-      function addIceCandidate(peerID, candidate) {
-        var peer = getPeer(peerID),
-            connection = peer.connection;
-
-        console.log('####adding candidate', peer, candidate);
-
-        connection.addIceCandidate(new RTCIceCandidate(candidate), function() {
-          fire('peer ice_candidate accepted', peer, candidate);
-        }, function(err) {
-          fire('peer error ice_candidate', peer, err, candidate);
-        });
-      };
-
-      function receiveAnswer(peerID, answer) {
-        var peer = getPeer(peerID),
-            connection = peer.connection;
-
-        connection.setRemoteDescription(new RTCSessionDescription(answer), function() {
-          fire('peer receive answer', peer, answer);
-        }, function(err) {
-          fire ('peer error answer', peer, answer);
-        });
-      };
+        if (peer) {
+          peer.close();
+          _.remove(peers, function(peer) { return peer.id === id; });
+          delete peersHash[id];
+          fire('peer removed', peer);
+        }
+      }
 
       function sendAnswer(peerID, offer) {
-        var peer = getPeer(peerID),
-            connection = peer.connection;
+        var peer = getPeer(peerID);
 
-        if (connection == null) {
-          peer.connect();
-          connection = peer.connection;
-        }      
-        
-        connection.setRemoteDescription(new RTCSessionDescription(offer), function() {
-          connection.createAnswer(function(answer) {
-            connection.setLocalDescription(answer, function() {
-              emit('peer answer', {
-                peerID: peerID,
-                answer: answer
-              });
+        peer
+          .receiveOffer(offer)
+          .then(
+            answer => {
+              emit('peer answer', {peerID, answer});
               fire('peer send answer', peer, answer);
-            }, function(err) {
-              fire('peer error set_local_description', peer, err, answer);
-            });
-          }, function(err) {
-            fire('peer error send answer', peer, err, offer);
-          });
-        }, function(err) {
-          fire('peer error set_remote_description', peer, err, offer);
-        });
+            },
+            ...error => fire(...error)
+          );
+
         fire('peer receive offer', peer, offer);
-      };
+      }
+
+      function receiveAnswer(peerID, answer) {
+        var peer = getPeer(peerID);
+
+        peer
+          .receiveAnswer(answer)
+          .then(
+            () =>     fire('peer receive answer', peer, answer),
+            error =>  fire('peer error answer', peer, error, answer));
+      }
+
+      function addIceCandidate(peerID, candidate) {
+        var peer = getPeer(peerID);
+
+        peer
+          .addIceCandidate(candidate)
+          .then(
+            () =>     fire('peer ice_candidate accepted', peer, candidate),
+            error =>  fire('peer error ice_candidate', peer, error, candidate));
+      }
 
       _.each({
-        'peer list': (data) => _.each(data.peerIDs, addPeer),
-        'peer join': (id) => addPeer(id),
-        'peer leave': (id) => removePeerByID(id),
-        'peer ice_candidate': (data) => addIceCandidate(data.peerID, data),
-        'peer offer': (data) => sendAnswer(data.peerID, data.offer),
-        'peer answer': (data) => receiveAnswer(data.peerID, data.answer)
+
+        'peer join':    id => addPeer(id),
+        'peer leave':   id => removePeerByID(id),
+
+        'peer list':  data => _.each(data.peerIDs, peerID => addPeer(peerID, {isExistingPeer: true})),
+
+        'peer offer': data => sendAnswer(data.peerID, data.offer),
+        'peer answer':data => receiveAnswer(data.peerID, data.answer),
+
+        'peer ice_candidate': data => addIceCandidate(data.peerID, data.candidate)
+
       }, (handler, name) => socket.on(name, function() {
+        console.log(name, arguments);
         handler.apply(this, arguments);
         fire(name, ...arguments);
       }));
@@ -222,18 +199,20 @@ function connectToSignal(server, onReady) {
     });
   });
 
+  var rooms = [];
+
   function joinRoom(roomName) {
-    socket.rooms.push(roomName);
+    rooms.push(roomName);
     emit('room join', roomName);
-  };
+  }
 
   function leaveRoom(roomName) {
-    _.remove(socket.rooms, roomName);
+    _.remove(rooms, roomName);
     emit('room leave', roomName);
-  };
+  }
 
   function leaveRooms() {
-    _.each(socket.rooms, leaveRoom);
+    _.each(rooms, leaveRoom);
   }
 
   var signal = {
@@ -241,11 +220,12 @@ function connectToSignal(server, onReady) {
     off: off,
     joinRoom: joinRoom,
     leaveRoom: leaveRoom,
-    leaveRooms: leaveRooms
+    leaveRooms: leaveRooms,
+    currentRooms: rooms
   };
 
   return signal;
-};
+}
 /*
 -  Signalling
 */
@@ -254,13 +234,11 @@ module.exports = function() {
   var signal;
 
   return {
-    connectToSignal: function(server) {
-      if (signal == null) signal = connectToSignal(server);
+    connectToSignal: server => {
+      if (signal === undefined) signal = connectToSignal(server);
       else if (signal.ready) fire('ready', signal.myID); // oof, get me (this line of code) out of here
       return signal;
     },
-    existingSignal: function() {
-      return signal;
-    }
+    existingSignal: () => signal
   };
 };
