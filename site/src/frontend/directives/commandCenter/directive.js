@@ -11,10 +11,10 @@ module.exports = function commandCenterDirective() {
       $scope.closeBlastDoors = instantFile.closeBlastDoors;
     },
     controller: [ '$scope',
-                  '$location', 
-                  'host', 
-                  'rtc', 
-                  'fileServeHandlers', 
+                  '$location',
+                  'host',
+                  'rtc',
+                  'fileServeHandlers',
                   'fileReceiveHandlers',
                   'chatServeHandlers',
                   'chatReceiveHandlers',
@@ -25,7 +25,7 @@ module.exports = function commandCenterDirective() {
           // Don't want this (should be a single call that handles this case)
           signal = rtc.existingSignal() || rtc.connectToSignal('https://' + window.location.host);
 
-  
+
       $scope.peers = [];
       $scope.connectedPeers = [];
       $scope.oldPeers = [];
@@ -107,38 +107,42 @@ module.exports = function commandCenterDirective() {
           $scope.peers.push(peer);
 
           if (!$scope.isClient) {
-            peer.connect(peer => {
-              setTimeout(() => {    
-                //Terrible placement. Fix this please
-                var chatServer = chatServeHandlers($scope.peers, (channel, message) => {
-                  console.log(message);
-                  $scope.chat.push(message);
-                  if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
-                  $scope.$apply();
-                });
+            peer.connect()
+              .then(
+                peer => {
+                  setTimeout(() => {
+                    //Terrible placement. Fix this please
+                    var chatServer = chatServeHandlers($scope.peers, (channel, message) => {
+                      console.log(message);
+                      $scope.chat.push(message);
+                      if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
+                      $scope.$apply();
+                    });
 
-                if ($scope.sendChat == null) {
-                  $scope.sendChat = message => {
-                    message = {peerID: room, message: message};
-                    chatServer.sendMessageToAll(message);
-                    $scope.chat.push(message);
-                    if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
-                  };
-                }
+                    if ($scope.sendChat == null) {
+                      $scope.sendChat = message => {
+                        message = {peerID: room, message: message};
+                        chatServer.sendMessageToAll(message);
+                        $scope.chat.push(message);
+                        if ($scope.chat.length > 10) $scope.chat.splice(0, 1);
+                      };
+                    }
 
-                var chatChannel = peer.addChannel('chat', {}, chatServer.handlers);
-                
-                chatChannel.on('open', function() {
-                  _.each($scope.chat, (message) => {
-                    chatServer.sendMessage(peer, message);
-                  });
-                });
+                    var chatChannel = peer.addChannel('chat', {}, chatServer.handlers);
 
-              }, 0);
-            });
+                    chatChannel.on('open', function() {
+                      _.each($scope.chat, (message) => {
+                        chatServer.sendMessage(peer, message);
+                      });
+                    });
+
+                  }, 0);
+                },
+                error => console.log(error));
 
             $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
             var channel = peer.addChannel('instafile.io', {}, fileServeHandlers($scope, host, room, (transfer) => {
+              channel.transfer = transfer;
               $scope.currentTransfer = transfer;
             }));
           }
@@ -155,6 +159,7 @@ module.exports = function commandCenterDirective() {
                     $scope.streamSrc = transfer.src;
                     $scope.isTransferring = transfer.progress < 1;
                     $scope.currentTransfer = transfer;
+                    channel.transfer = transfer;
                     queueApply();
                   }));
                 }
