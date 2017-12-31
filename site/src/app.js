@@ -26,7 +26,7 @@ function getPublicAddress (deliver) {
     return;
   }
 
-  http.get('http://fugal.net/ip.cgi', function(error, res, body) {
+  http.get('https://api.ipify.org', function(error, res, body) {
     if (res.statusCode != 200) {
         throw new Error('non-OK status: ' + res.statusCode);
     }
