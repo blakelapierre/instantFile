@@ -138,7 +138,7 @@ module.exports = function commandCenterDirective() {
                 error => console.log(error));
 
             $scope.connectedPeers.push(peer); // Is this the best spot to put this? Note, we aren't even guaranteed to be able to connect to the Peer at this point
-            var channel = peer.addChannel('instafile.io', {}, fileServeHandlers($scope, host, room, (transfer) => {
+            var channel = peer.addChannel('p2p.ninja', {}, fileServeHandlers($scope, host, room, (transfer) => {
               channel.transfer = transfer;
               $scope.currentTransfer = transfer;
             }));
@@ -150,7 +150,7 @@ module.exports = function commandCenterDirective() {
             peer.on({
               'channel added': (channel) => {
                 console.log('channel added', channel);
-                if (channel.label == 'instafile.io') {
+                if (channel.label == 'p2p.ninja') {
                   channel.on(fileReceiveHandlers(room, (transfer) => {
                     $scope.file = transfer.file;
                     $scope.isTransferring = transfer.progress < 1;

@@ -22,7 +22,7 @@ module.exports = function instantFileDirective() {
 
       $scope.$watch('droppedFile', function(droppedFile) {
         host.file = droppedFile;
-        
+
         if (droppedFile) {
           launchCommandCenter();
         }
@@ -38,9 +38,8 @@ module.exports = function instantFileDirective() {
       };
 
       $scope.blastDoorsMessages = [
-        'Welcome to instaFile.io',
-        'Encrypted Peer-to-Peer File Sharing',
-        'Brought to you by WebRTC'
+        'p2p.ninja',
+        'Peer-to-Peer File Sharing'
       ];
 
       this.addBlastDoorsMessage = function(message) {

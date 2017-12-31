@@ -94,7 +94,7 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
             backoff = 0;
           } catch(e) {
             backoff = Math.min(1000, backoff + 100);
-            
+
             maxBufferAmount = channel.bufferedAmount;
 
             if (maxBufferAmount == 0) maxBufferAmount = Number.POSITIVE_INFINITY;
@@ -111,12 +111,14 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
 
       var transferred = offset - buffered;
 
-      transfer.transferred = transferred;
-      transfer.progress = transferred / transfer.total;
-      transfer.backoff = backoff;
-      transfer.lastSend = now;
-      transfer.buffered = buffered;
-      transfer.maxBuffered = maxBufferAmount;
+      Object.extend(transfer, {backoff, buffered, lastSend, maxBuffered, transferred, progress: transferred / transfer.total});
+
+      // transfer.transferred = transferred;
+      // transfer.progress = transferred / transfer.total;
+      // transfer.backoff = backoff;
+      // transfer.lastSend = now;
+      // transfer.buffered = buffered;
+      // transfer.maxBuffered = maxBufferAmount;
 
       if (progress) progress(transfer);
 
