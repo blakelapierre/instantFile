@@ -91,9 +91,9 @@ cert = ['-----BEGIN CERTIFICATE-----',
         '-----END CERTIFICATE-----'].join('\n');
 }
 else {
-  ca = [fs.readFileSync(path.join(__dirname, './server/cert/GandiStandardSSLCA.crt'))];
-  key = fs.readFileSync(path.join(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE, 'instafile.io.key'));
-  cert = fs.readFileSync(path.join(__dirname, './server/cert/instafile.io.cert'));
+  ca = [fs.readFileSync(path.join(__dirname, 'ca))];
+  key = fs.readFileSync(path.join(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE, 'key'));
+  cert = fs.readFileSync(path.join(__dirname, 'cert'));
 }
 
 startServer({
