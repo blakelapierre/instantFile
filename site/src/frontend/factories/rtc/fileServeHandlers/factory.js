@@ -111,7 +111,7 @@ module.exports = ['getFileBuffer', function fileServeHandlers(getFileBuffer) {
 
       var transferred = offset - buffered;
 
-      Object.assign(transfer, {backoff, buffered, lastSend, maxBuffered, transferred, progress: transferred / transfer.total});
+      Object.assign(transfer, {backoff, buffered, lastSend: now, maxBufferedAmount, transferred, progress: transferred / transfer.total});
 
       // transfer.transferred = transferred;
       // transfer.progress = transferred / transfer.total;
