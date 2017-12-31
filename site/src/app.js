@@ -91,7 +91,7 @@ cert = ['-----BEGIN CERTIFICATE-----',
         '-----END CERTIFICATE-----'].join('\n');
 }
 else {
-  ca = [fs.readFileSync(path.join(__dirname, 'ca))];
+  ca = [fs.readFileSync(path.join(__dirname, 'ca'))];
   key = fs.readFileSync(path.join(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE, 'key'));
   cert = fs.readFileSync(path.join(__dirname, 'cert'));
 }
